@@ -2,7 +2,7 @@
 
 Predict `fare_amount` from a supplied **50,000-trip dataset** using a saved preprocessing and regression pipeline.
 
-🌐 **Live Streamlit App:** https://uber-fare-prediction-model.streamlit.app/
+🌐 **Live Demo:** https://uber-fare-prediction-model.streamlit.app/
 
 > 💡 Enter trip details, generate an estimated fare, and explore the project dashboard directly in the deployed app.
 
@@ -59,23 +59,6 @@ The original saved model:
 > 📌 **Important:** MAE and RMSE are measured in fare units. MSE is measured in squared fare units. R² is **not percentage accuracy**.
 
 The same test scores are used for model comparison and selection, so they should not be interpreted as an independent final benchmark.
-
----
-
-## 🚀 Live Demo
-
-Try the deployed application here:
-
-### 🌐 [Uber Fare Prediction Streamlit App](https://uber-fare-prediction-model.streamlit.app/)
-
-The app allows users to:
-
-- 📍 Enter trip information
-- 🛣️ Provide planned route distance
-- 💳 Select booking-time information
-- 🤖 Generate a fare prediction
-- 📊 Explore project-level data insights
-- 📐 Compare route information with straight-line distance references
 
 ---
 
@@ -293,16 +276,6 @@ For the detailed verification process, see:
 
 ---
 
-## 🌐 Deployment
-
-The project is deployed using **Streamlit Community Cloud**.
-
-### 🚀 Live Application
-
-👉 https://uber-fare-prediction-model.streamlit.app/
-
----
-
 ## 🛠️ Tech Stack
 
 - 🐍 Python
@@ -341,8 +314,6 @@ The project is deployed using **Streamlit Community Cloud**.
 
 ---
 
-### ⭐ If you find this project useful
+### ⭐ Support the Project
 
-Consider giving the repository a **star ⭐** and exploring the live application.
-
-🚕 **Try the model:** https://uber-fare-prediction-model.streamlit.app/
+If you find this project useful, consider giving the repository a **star ⭐**.
