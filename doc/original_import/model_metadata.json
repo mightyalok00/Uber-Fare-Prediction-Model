@@ -1,0 +1,66 @@
+{
+  "best_model": "Linear Regression",
+  "features": [
+    "city",
+    "payment_method",
+    "pickup_lat",
+    "pickup_lng",
+    "drop_lat",
+    "drop_lng",
+    "distance_km",
+    "pickup_year",
+    "pickup_month",
+    "pickup_day",
+    "pickup_hour",
+    "day_of_week",
+    "is_weekend",
+    "is_rush_hour"
+  ],
+  "categorical_features": [
+    "city",
+    "payment_method"
+  ],
+  "numeric_features": [
+    "pickup_lat",
+    "pickup_lng",
+    "drop_lat",
+    "drop_lng",
+    "distance_km",
+    "pickup_year",
+    "pickup_month",
+    "pickup_day",
+    "pickup_hour",
+    "day_of_week",
+    "is_weekend",
+    "is_rush_hour"
+  ],
+  "metrics": [
+    {
+      "Model": "Linear Regression",
+      "MAE": 2.473802447374453,
+      "MSE": 9.566162607165975,
+      "RMSE": 3.0929213709963554,
+      "R2": 0.7542642125779195
+    },
+    {
+      "Model": "Gradient Boosting",
+      "MAE": 2.4756482748273747,
+      "MSE": 9.595738004486272,
+      "RMSE": 3.0976988240444343,
+      "R2": 0.7535044791458974
+    },
+    {
+      "Model": "Random Forest",
+      "MAE": 2.511807006777591,
+      "MSE": 9.978767730054866,
+      "RMSE": 3.158918759647811,
+      "R2": 0.7436652034526163
+    }
+  ],
+  "training_rows": 34030,
+  "testing_rows": 8508,
+  "source_rows": 50000,
+  "clean_rows": 49997,
+  "completed_model_rows": 42538,
+  "note": "passenger_count is absent from the supplied source dataset and was not fabricated."
+}

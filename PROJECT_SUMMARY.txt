@@ -1,0 +1,15 @@
+Uber Fare Prediction — verified local project
+
+Source project: C:\Users\Alok Agarwal\OneDrive\Desktop\Uber_Fare_Prediction
+Destination: D:\Project_4_Uber Fare Prediction Model\Uber_Fare_Prediction
+Original parent CSV and brief remain unchanged; imported versions are backed up.
+Dataset: 50,000 raw, 49,997 cleaned, 42,538 Completed training-ready rows.
+Split: 34,030 train / 8,508 test, random_state=42, no trip-ID overlap.
+Selected model: Linear Regression.
+MAE 2.4738024474; MSE 9.5661626072; RMSE 3.0929213710; R2 0.7542642126.
+Saved model load/predict: PASS. Refit matches saved predictions exactly.
+Joblib save/reload full-test prediction equality: PASS.
+Reproduce: python train.py --output-dir work/run_001
+App: python -m streamlit run app/app.py
+See README.md for environment setup and interpretation limitations.
+Local Git only; no GitHub publication.

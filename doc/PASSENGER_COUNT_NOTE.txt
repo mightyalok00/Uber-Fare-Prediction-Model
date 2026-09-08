@@ -1,0 +1,17 @@
+Passenger Count - Data Availability Note
+
+The original project brief lists passenger_count as a potential model feature.
+
+However, the supplied 50,000-row dataset does not contain passenger_count,
+and no existing column provides enough information to reconstruct the true
+number of passengers for an individual trip.
+
+Mathematics and statistics cannot recover the ground-truth passenger count
+without a valid relationship learned from labeled passenger-count data.
+
+For this reason, this project intentionally does not generate random or
+synthetic passenger counts and does not make unsupported business conclusions
+about passenger-count effects.
+
+If passenger-count analysis is mandatory, use a source dataset that includes
+a genuine passenger_count field.

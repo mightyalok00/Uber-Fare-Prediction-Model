@@ -1,0 +1,86 @@
+{
+  "best_model": "Linear Regression",
+  "features": [
+    "city",
+    "payment_method",
+    "pickup_lat",
+    "pickup_lng",
+    "drop_lat",
+    "drop_lng",
+    "distance_km",
+    "pickup_year",
+    "pickup_month",
+    "pickup_day",
+    "pickup_hour",
+    "day_of_week",
+    "is_weekend",
+    "is_rush_hour"
+  ],
+  "categorical_features": [
+    "city",
+    "payment_method"
+  ],
+  "numeric_features": [
+    "pickup_lat",
+    "pickup_lng",
+    "drop_lat",
+    "drop_lng",
+    "distance_km",
+    "pickup_year",
+    "pickup_month",
+    "pickup_day",
+    "pickup_hour",
+    "day_of_week",
+    "is_weekend",
+    "is_rush_hour"
+  ],
+  "metrics": [
+    {
+      "Model": "Linear Regression",
+      "MAE": 2.4738024473744527,
+      "MSE": 9.566162607165975,
+      "RMSE": 3.0929213709963554,
+      "R2": 0.7542642125779195
+    },
+    {
+      "Model": "Gradient Boosting",
+      "MAE": 2.4756482748273747,
+      "MSE": 9.595738004486272,
+      "RMSE": 3.0976988240444343,
+      "R2": 0.7535044791458974
+    },
+    {
+      "Model": "Random Forest",
+      "MAE": 2.511922156254814,
+      "MSE": 9.981313722218445,
+      "RMSE": 3.159321718695082,
+      "R2": 0.7435998019520587
+    }
+  ],
+  "training_rows": 34030,
+  "testing_rows": 8508,
+  "completed_model_rows": 42538,
+  "split": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "shuffle": true
+  },
+  "dataset_sha256": "2a81c5d96f8ea39f37769a850b2ea97775d396a8e2f0097a565c4725be37196e",
+  "python": "3.14.7",
+  "versions": {
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "scikit-learn": "1.9.0",
+    "joblib": "1.5.3",
+    "scipy": "1.18.1",
+    "streamlit": "1.62.0"
+  },
+  "persistence_roundtrip": "PASS",
+  "original_saved_model_metrics": {
+    "MAE": 2.4738024473744527,
+    "MSE": 9.566162607165975,
+    "RMSE": 3.0929213709963554,
+    "R2": 0.7542642125779195
+  },
+  "note": "Passenger count is absent. Model selection uses this same test split; scores are selection-set estimates, not an independent final benchmark."
+}

@@ -1,0 +1,6 @@
+{
+  "startup": "PASS",
+  "default_prediction": "Estimated fare: $15.98",
+  "changed_city_and_payment": "PASS",
+  "empty_filters": "PASS"
+}

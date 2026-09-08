@@ -1,0 +1,20 @@
+{
+  "source": "C:\\Users\\Alok Agarwal\\OneDrive\\Desktop\\Uber_Fare_Prediction",
+  "train_rows": 34030,
+  "test_rows": 8508,
+  "saved_metrics": {
+    "MAE": 2.4738024473744527,
+    "MSE": 9.566162607165975,
+    "RMSE": 3.0929213709963554,
+    "R2": 0.7542642125779195
+  },
+  "refit_metrics": {
+    "MAE": 2.4738024473744527,
+    "MSE": 9.566162607165975,
+    "RMSE": 3.0929213709963554,
+    "R2": 0.7542642125779195
+  },
+  "roundtrip": "PASS",
+  "saved_refit_max_difference": 0.0,
+  "example_prediction": 20.50739373137264
+}

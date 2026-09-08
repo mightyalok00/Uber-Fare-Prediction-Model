@@ -1,0 +1,2 @@
+city,payment_method,pickup_lat,pickup_lng,drop_lat,drop_lng,distance_km,pickup_year,pickup_month,pickup_day,pickup_hour,day_of_week,is_weekend,is_rush_hour
+Chicago,Wallet,39.20461626939273,-104.63364481125788,39.210348288412185,-104.5842950356982,9.44,2023,1,16,21,0,0,0

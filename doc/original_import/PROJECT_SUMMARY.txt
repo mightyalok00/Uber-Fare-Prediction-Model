@@ -1,0 +1,55 @@
+Uber Fare Prediction Model - Final Recreated Project Package
+
+Project objective
+-----------------
+Build a regression model that estimates expected Uber fare before a trip is completed.
+
+Final package includes
+----------------------
+- Original 50K trip dataset
+- Cleaned 49,997-row dataset
+- Completed-trip training-ready dataset
+- Executed Jupyter notebook
+- Trained fare prediction model (.pkl)
+- Model metadata and comparison results
+- Streamlit prediction app
+- Interactive business dashboard and filters
+- Business analysis report (DOCX + PDF)
+- Dataset quality report
+- README.md
+- requirements.txt
+- .gitignore
+- Analysis charts
+
+Passenger-count decision
+------------------------
+The supplied dataset does NOT contain passenger_count.
+Passenger count cannot be truthfully calculated from fare, distance, city,
+coordinates, rider_id, driver_id, payment method, trip status, or trip duration.
+
+Therefore:
+- passenger_count was NOT fabricated;
+- passenger-count distribution was NOT presented as real analysis;
+- fare-vs-passenger-count conclusions were NOT invented;
+- the limitation is documented transparently.
+
+Data-quality corrections
+------------------------
+- Removed 3 rows with zero distance / zero trip duration.
+- No missing values were found in the original 14 source columns.
+- No duplicate rows or duplicate trip IDs were found.
+- No negative fares or invalid coordinate ranges were found.
+- Completed trips are used as the training-ready fare-model population.
+
+Important synthetic-data limitation
+-----------------------------------
+The supplied distance_km is not mathematically derived from the supplied
+pickup/drop-off coordinates. Haversine distance was calculated for auditing,
+but the original distance_km is retained because it is the distance field
+actually associated with fare_amount in this synthetic dataset.
+
+Modeling integrity
+------------------
+Post-trip information such as actual drop_time and actual trip_duration_min
+should not be used as fare-prediction inputs because they are not known before
+the ride is completed.
