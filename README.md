@@ -75,4 +75,4 @@ Uber_Fare_Prediction/
 - The cleaned export truncates drop timestamps to seconds; the raw CSV retains subsecond precision. Drop time is not a predictive feature.
 - `uber_trips_dataset_50k_cleaned.csv` is the canonical dashboard dataset; `uber_trips_completed_training_ready.csv` is the training source. `uber_fare_cleaned.csv` is retained for provenance.
 - Original reports are retained as supplied. See `doc/VALIDATION_REPORT.md` for the current verification and changes.
-- Git is local only. Nothing has been published or pushed to GitHub.
+- Source code and project artifacts are published in this GitHub repository on the `main` branch.
