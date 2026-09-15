@@ -1,319 +1,119 @@
 # 🚕 Uber Fare Prediction Model
 
-Predict `fare_amount` from a supplied **50,000-trip dataset** using a saved preprocessing and regression pipeline.
+An end-to-end regression portfolio project built from a supplied **50,000-trip dataset**, covering data validation, feature engineering, leakage-aware preprocessing, training-only cross-validation, final holdout evaluation, model persistence, reproducibility, and Streamlit deployment.
 
-🌐 **Live Demo:** https://uber-fare-prediction-model.streamlit.app/
+🌐 **Live demo:** https://uber-fare-prediction-model.streamlit.app/
 
-> 💡 Enter trip details, generate an estimated fare, and explore the project dashboard directly in the deployed app.
+## Business objective
 
----
+Estimate `fare_amount` from information available for a trip while demonstrating a reproducible machine-learning workflow suitable for technical review.
 
-## 🎯 Project Objective
+## Dataset and modeling scope
 
-Build a reproducible machine-learning regression workflow that predicts expected Uber fare while keeping preprocessing, model training, validation, persistence, and deployment consistent.
+- Original dataset: approximately **50,000 trips**
+- Clean records retained: **49,997**
+- Completed trips used for modeling: **42,538**
+- Train/test split: **80:20**, `random_state=42`
+- Training rows: **34,030**
+- Final holdout rows: **8,508**
+- Trip IDs are checked for train/test separation
+- Preprocessing is fitted inside scikit-learn pipelines
+- Passenger count is not fabricated because it is absent from the supplied dataset
 
-The project includes:
+## Modeling methodology
 
-- 🧹 Data cleaning and validation
-- 🛠️ Feature preprocessing
-- 🤖 Multiple regression models
-- 📊 Model evaluation
-- 💾 Saved preprocessing + prediction pipeline
-- 🔁 Reproducible training
-- ✅ Persistence verification
-- 📓 Jupyter Notebook analysis
-- 🌐 Streamlit deployment
+`train.py` now uses a stricter evaluation design:
 
----
+1. Create one 80/20 train/test split.
+2. Keep the test partition untouched during model selection.
+3. Compare **Linear Regression, Random Forest, and Gradient Boosting** using **5-fold KFold cross-validation** on the training partition only (`shuffle=True`, `random_state=42`).
+4. Report CV mean ± standard deviation for **MAE, RMSE, and R²**.
+5. Select the model with the lowest mean CV RMSE.
+6. Fit that selected pipeline on the complete training partition.
+7. Evaluate it once on the held-out test set.
+8. Save/reload the pipeline and verify prediction consistency.
 
-## 📊 Verified Model Results
+This avoids selecting a model by repeatedly inspecting the final test set.
 
-Latest training-ready dataset:
+## Previously verified baseline results
 
-- 🚘 **Completed trips:** 42,538
-- 🏋️ **Training rows:** 34,030
-- 🧪 **Test rows:** 8,508
-- 🔀 **Split:** 80:20
-- 🎲 **Random state:** `42`
-- ✅ Trip IDs do not overlap between train and test sets
-- ✅ Preprocessing is fitted only on training data
-- ✅ Each model uses an independent preprocessing instance
+Before the training-only CV selection upgrade, the same fixed 80/20 split produced these model-comparison results:
 
-| 🤖 Model | MAE | MSE | RMSE | R² |
-| --- | ---: | ---: | ---: | ---: |
-| 🥇 **Linear Regression** | **2.473802** | **9.566163** | **3.092921** | **0.754264** |
-| 🥈 Gradient Boosting | 2.475648 | 9.595738 | 3.097699 | 0.753504 |
-| 🥉 Random Forest | 2.511922 | 9.981314 | 3.159322 | 0.743600 |
+| Model | MAE | RMSE | R² |
+| --- | ---: | ---: | ---: |
+| **Linear Regression** | **2.473802** | **3.092921** | **0.754264** |
+| Gradient Boosting | 2.475648 | 3.097699 | 0.753504 |
+| Random Forest | 2.511922 | 3.159322 | 0.743600 |
 
-### 🏆 Selected Model
+These values are retained as a **historical baseline**, not presented as results from the new CV-selection workflow. Run `train.py` to generate the current `cross_validation_results.csv` and `final_test_metrics.csv` for a fresh output directory.
 
-**Linear Regression** achieved the best results among the tested models and is used as the packaged prediction model.
+> R² is not percentage accuracy. MAE/RMSE are regression error measures in fare units.
 
-The original saved model:
-
-- ✅ Loads successfully
-- ✅ Predicts successfully
-- ✅ Produces predictions matching a fresh refit exactly
-- ✅ Produces identical predictions after save/reload
-
-> 📌 **Important:** MAE and RMSE are measured in fare units. MSE is measured in squared fare units. R² is **not percentage accuracy**.
-
-The same test scores are used for model comparison and selection, so they should not be interpreted as an independent final benchmark.
-
----
-
-## ⚙️ Windows Setup
-
-From the repository root, with **Python 3.14** installed:
+## Reproduce training
 
 ```powershell
-py -3.14 -m venv .venv
+py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m streamlit run app/app.py
-```
-
----
-
-## 🔁 Reproduce Training & Validation
-
-Run:
-
-```powershell
 .\.venv\Scripts\python.exe train.py --output-dir work/run_001
 ```
 
-This reproduces:
+Each run generates:
 
-- 🧹 Dataset checks
-- ✂️ Train/test split
-- 🛠️ Preprocessing
-- 🤖 Model training
-- 📊 Evaluation metrics
-- 💾 Model persistence
-- 🔄 Save/reload prediction checks
-- ✅ Refit prediction verification
+- `cross_validation_results.csv`
+- `final_test_metrics.csv`
+- `model_metadata.json`
+- `uber_fare_model.pkl`
+- `example_input.csv`
+- `example_prediction.json`
+- `test_predictions.csv`
 
-> ⚠️ Choose a new output directory for every run. Existing non-empty output folders are rejected to prevent accidental overwriting.
+Use a new/empty output directory for each run so existing artifacts are not overwritten accidentally.
 
-The original packaged model is never overwritten.
+## Features
 
----
+The model uses trip/location, distance, payment/city, and pickup-time-derived features. Post-trip or leakage-prone information such as actual duration, drop time, trip status, IDs, and fare-derived columns is excluded from model input.
 
-## 📓 Open the Jupyter Notebook
+The supplied `distance_km` is treated as planned route distance. Coordinate-derived straight-line distance is not used as a substitute for the supplied route-distance field.
 
-```powershell
-.\.venv\Scripts\python.exe -m notebook notebooks/Uber_Fare_Prediction.ipynb
-```
-
-The notebook contains the project analysis, preprocessing workflow, training process, evaluation, and model verification.
-
----
-
-## 💾 Load the Saved Model
-
-```python
-from pathlib import Path
-import joblib
-import pandas as pd
-
-root = Path.cwd()  # run from repository root
-
-model = joblib.load(
-    root / "models/uber_fare_model.pkl"
-)
-
-trip = pd.read_csv(
-    root / "models/example_input.csv"
-)
-
-prediction = model.predict(trip)
-
-print(prediction)
-# approximately 20.5074
-```
-
-The `.pkl` file is a **joblib artifact containing both preprocessing and the regression estimator**.
-
-> 🔐 Only load serialized model files from trusted sources.
-
-Use the package versions pinned in `requirements.txt` for maximum compatibility.
-
----
-
-## 📁 Project Structure
+## Repository structure
 
 ```text
-Uber_Fare_Prediction/
-│
-├── 📂 dataset/
-│   └── Original, cleaned and Completed-trip training-ready CSVs
-│
-├── 📂 notebooks/
-│   └── Executable analysis and training notebook
-│
-├── 📂 models/
-│   └── Saved pipeline, metadata, metrics and prediction examples
-│
-├── 📂 app/
-│   └── Streamlit prediction app and business dashboard
-│
-├── 📂 doc/
-│   └── Reports, validation notes and imported versions
-│
-├── 📂 images/charts/
-│   └── Existing analysis charts
-│
-├── 🐍 train.py
-├── 📦 requirements.txt
-├── 📖 README.md
-├── 🙈 .gitignore
-└── 📝 PROJECT_SUMMARY.txt
+Uber-Fare-Prediction-Model/
+├── app/                 # Streamlit prediction/dashboard app
+├── dataset/             # Source and prepared datasets
+├── doc/                 # Validation and project documentation
+├── images/charts/       # Analysis visuals
+├── models/              # Packaged model and supporting artifacts
+├── notebooks/           # EDA and modeling notebook
+├── train.py             # Reproducible CV + final-test training workflow
+├── requirements.txt
+├── PROJECT_SUMMARY.txt
+└── README.md
 ```
 
----
+## Technical evidence
 
-## 🧹 Data Processing
+- Data integrity and provenance checks
+- Feature engineering verification
+- Train/test ID separation
+- Pipeline-based preprocessing
+- Independent model pipelines
+- 5-fold training-only cross-validation
+- MAE, RMSE and R² reporting
+- Untouched final holdout evaluation
+- Saved-model persistence verification
+- Streamlit deployment
+- Reproducible output artifacts
 
-The original dataset contains approximately **50,000 trip records**.
+## Tech stack
 
-Cleaning and training preparation include:
+`Python` `Pandas` `NumPy` `scikit-learn` `Matplotlib` `Jupyter Notebook` `Joblib` `Streamlit`
 
-- ❌ 3 invalid zero-distance trips removed
-- ✅ 49,997 cleaned records retained
-- 🚘 Only **Completed** trips used for model training
-- ✅ 42,538 Completed trips available for training
-- 🚫 No target-percentile trimming applied
+## Limitations
 
----
+This is an educational dataset and should not be interpreted as a model of real Uber pricing. The project demonstrates regression methodology and engineering practice, not a production pricing system. A production system would require real operational data, temporal/geographic validation, monitoring, drift detection, security controls, automated CI/CD, and ongoing model governance.
 
-## 🧠 Feature & Modeling Decisions
+## Author
 
-Several precautions were taken to avoid leakage and fabricated features.
-
-### 🚫 Excluded Features
-
-The following are not used as model inputs:
-
-- Trip IDs
-- Trip status
-- Actual duration
-- Drop time
-- Fare-derived columns
-- Other post-trip information
-
-### 👥 Passenger Count
-
-Passenger count does not exist in the supplied dataset.
-
-It is therefore:
-
-**Not fabricated and not estimated.**
-
-### 💳 Payment Method
-
-Payment method is assumed to be known at booking time and is therefore allowed as an input feature.
-
----
-
-## 📍 Distance Interpretation
-
-The supplied `distance_km` does not reliably align with coordinate-derived Haversine distance.
-
-For this reason:
-
-- 🛣️ Planned route distance is used as the prediction input
-- 📐 Straight-line Haversine distance is shown only as a reference
-- ⚠️ The educational dataset cannot be used to validate real-world Uber pricing behavior
-
----
-
-## 🕐 Timestamp Handling
-
-The cleaned dataset truncates drop timestamps to seconds.
-
-The original CSV retains subsecond timestamp precision.
-
-Drop time is not used as a predictive feature.
-
----
-
-## 📦 Dataset Files
-
-### 📊 Dashboard Dataset
-
-`uber_trips_dataset_50k_cleaned.csv`
-
-Used as the canonical dataset for dashboard exploration.
-
-### 🧠 Training Dataset
-
-`uber_trips_completed_training_ready.csv`
-
-Used as the canonical training source.
-
-### 🗃️ Provenance Dataset
-
-`uber_fare_cleaned.csv`
-
-Retained for provenance and traceability.
-
----
-
-## ✅ Validation
-
-The project includes explicit validation checks for:
-
-- Data integrity
-- Train/test separation
-- Preprocessing leakage
-- Model persistence
-- Prediction reproducibility
-- Saved model compatibility
-
-For the detailed verification process, see:
-
-`doc/VALIDATION_REPORT.md`
-
----
-
-## 🛠️ Tech Stack
-
-- 🐍 Python
-- 🐼 Pandas
-- 🔢 NumPy
-- 🤖 Scikit-learn
-- 💾 Joblib
-- 📊 Matplotlib
-- 📓 Jupyter Notebook
-- 🌐 Streamlit
-- 🐙 GitHub
-
----
-
-## 📌 Project Highlights
-
-- ✅ Reproducible ML workflow
-- ✅ Leakage-aware preprocessing
-- ✅ Independent preprocessing per model
-- ✅ Multiple regression models compared
-- ✅ Saved preprocessing + estimator pipeline
-- ✅ Exact persistence verification
-- ✅ Streamlit deployment
-- ✅ Clean repository structure
-- ✅ Documented validation methodology
-- ✅ No fabricated passenger-count feature
-- ✅ Reproducible train/test split
-
----
-
-## 👨‍💻 Author
-
-**Alok Agarwal**
-
-📊 Data Science | 🤖 Machine Learning | 📈 Digital Marketing
-
----
-
-### ⭐ Support the Project
-
-If you find this project useful, consider giving the repository a **star ⭐**.
+**Alok Agarwal**  
+Data Analytics • Data Science • Machine Learning • Digital Marketing
