@@ -1,6 +1,6 @@
 {
   "best_model": "Linear Regression",
-  "artifact_status": "historical_packaged_baseline",
+  "artifact_status": "historical_packaged_baseline_coordinate_dependent",
   "features": [
     "city",
     "payment_method",
@@ -17,10 +17,7 @@
     "is_weekend",
     "is_rush_hour"
   ],
-  "categorical_features": [
-    "city",
-    "payment_method"
-  ],
+  "categorical_features": ["city", "payment_method"],
   "numeric_features": [
     "pickup_lat",
     "pickup_lng",
@@ -36,53 +33,21 @@
     "is_rush_hour"
   ],
   "metrics": [
-    {
-      "Model": "Linear Regression",
-      "MAE": 2.4738024473744527,
-      "MSE": 9.566162607165975,
-      "RMSE": 3.0929213709963554,
-      "R2": 0.7542642125779195
-    },
-    {
-      "Model": "Gradient Boosting",
-      "MAE": 2.4756482748273747,
-      "MSE": 9.595738004486272,
-      "RMSE": 3.0976988240444343,
-      "R2": 0.7535044791458974
-    },
-    {
-      "Model": "Random Forest",
-      "MAE": 2.511922156254814,
-      "MSE": 9.981313722218445,
-      "RMSE": 3.159321718695082,
-      "R2": 0.7435998019520587
-    }
+    {"Model": "Linear Regression", "MAE": 2.4738024473744527, "MSE": 9.566162607165975, "RMSE": 3.0929213709963554, "R2": 0.7542642125779195},
+    {"Model": "Gradient Boosting", "MAE": 2.4756482748273747, "MSE": 9.595738004486272, "RMSE": 3.0976988240444343, "R2": 0.7535044791458974},
+    {"Model": "Random Forest", "MAE": 2.511922156254814, "MSE": 9.981313722218445, "RMSE": 3.159321718695082, "R2": 0.7435998019520587}
   ],
   "training_rows": 34030,
   "testing_rows": 8508,
   "completed_model_rows": 42538,
-  "split": {
-    "test_size": 0.2,
-    "random_state": 42,
-    "shuffle": true
-  },
+  "split": {"test_size": 0.2, "random_state": 42, "shuffle": true},
   "dataset_sha256": "2a81c5d96f8ea39f37769a850b2ea97775d396a8e2f0097a565c4725be37196e",
-  "python": "3.14.7",
-  "versions": {
-    "numpy": "2.5.2",
-    "pandas": "3.0.5",
-    "scikit-learn": "1.9.0",
-    "joblib": "1.5.3",
-    "scipy": "1.18.1",
-    "streamlit": "1.62.0"
-  },
   "persistence_roundtrip": "PASS",
-  "original_saved_model_metrics": {
-    "MAE": 2.4738024473744527,
-    "MSE": 9.566162607165975,
-    "RMSE": 3.0929213709963554,
-    "R2": 0.7542642125779195
+  "coordinate_policy": {
+    "status": "legacy_artifact_only",
+    "reason": "The supplied pickup/drop-off coordinates are not internally consistent with distance_km and are excluded from the current train.py feature set.",
+    "live_app_behavior": "The Streamlit app detects this legacy coordinate-dependent metadata and rebuilds a coordinate-safe Linear Regression for live prediction instead of using this packaged artifact."
   },
-  "current_training_methodology": "Model selection in train.py uses 5-fold cross-validation on the training partition only, selects the lowest mean CV RMSE, then evaluates the selected model once on the untouched holdout test set.",
-  "note": "This metadata file describes the historical packaged baseline artifact retained in models/. Its fixed-split metrics are preserved for reproducibility. For current model-selection methodology and fresh CV/final-test results, run train.py into a new or empty output directory and use the generated model_metadata.json there. Passenger count is absent from the supplied dataset and is not fabricated."
+  "current_training_methodology": "train.py excludes pickup/drop-off coordinates, uses 5-fold cross-validation on the training partition only, selects the lowest mean CV RMSE, and evaluates the selected model once on the untouched holdout test set.",
+  "note": "This metadata describes a retained historical baseline artifact. It must not be presented as the current coordinate-safe production model. Passenger count is absent from the supplied dataset and is not fabricated."
 }
