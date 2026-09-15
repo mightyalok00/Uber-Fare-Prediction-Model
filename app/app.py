@@ -20,13 +20,14 @@ DATA_PATH = BASE / "dataset" / "uber_trips_dataset_50k_cleaned.csv"
 
 CORRECTED_FEATURES = [
     "city", "payment_method", "distance_km", "pickup_year", "pickup_month",
-    "pickup_day", "pickup_hour", "day_of_week", "is_weekend", "is_rush_hour"
+    "pickup_day", "pickup_hour", "day_of_week", "is_weekend", "is_rush_hour",
 ]
 LEGACY_COORDS = ["pickup_lat", "pickup_lng", "drop_lat", "drop_lng"]
 REQUIRED_SOURCE_COLUMNS = {
     "city", "payment_method", "distance_km", "fare_amount", "status",
-    "pickup_time", "drop_time"
+    "pickup_time", "drop_time",
 }
+DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 st.set_page_config(page_title="Uber Fare Intelligence", page_icon="🚕", layout="wide")
 
@@ -53,9 +54,7 @@ def load_data():
     data["is_rush_hour"] = data["pickup_hour"].isin([7, 8, 9, 16, 17, 18, 19]).astype(int)
     data["day_name"] = data["pickup_time"].dt.day_name()
     data["month_name"] = data["pickup_time"].dt.month_name().str.slice(stop=3)
-    data["trip_duration_min"] = (
-        data["drop_time"] - data["pickup_time"]
-    ).dt.total_seconds() / 60
+    data["trip_duration_min"] = (data["drop_time"] - data["pickup_time"]).dt.total_seconds() / 60
     return data
 
 
@@ -72,12 +71,12 @@ def load_meta():
 def build_corrected_pipeline():
     cat = ["city", "payment_method"]
     num = [c for c in CORRECTED_FEATURES if c not in cat]
-    pre = ColumnTransformer([
+    preprocess = ColumnTransformer([
         ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), cat),
         ("num", StandardScaler(), num),
     ])
     return Pipeline([
-        ("preprocess", pre),
+        ("preprocess", preprocess),
         ("model", LinearRegression()),
     ])
 
@@ -96,7 +95,7 @@ def load_prediction_model():
     ):
         try:
             packaged = joblib.load(MODEL_PATH)
-            return packaged, packaged_features, "packaged coordinate-safe model", None
+            return packaged, packaged_features, "packaged coordinate-safe model", None, pd.DataFrame()
         except Exception:
             pass
 
@@ -108,7 +107,7 @@ def load_prediction_model():
 
     X_train, X_test, y_train, y_test = train_test_split(
         completed[CORRECTED_FEATURES], completed["fare_amount"],
-        test_size=0.20, random_state=42, shuffle=True
+        test_size=0.20, random_state=42, shuffle=True,
     )
     model = build_corrected_pipeline()
     model.fit(X_train, y_train)
@@ -120,12 +119,38 @@ def load_prediction_model():
         "RMSE": float(np.sqrt(mse)),
         "R2": float(r2_score(y_test, pred)),
     }
-    return model, CORRECTED_FEATURES, "runtime coordinate-safe Linear Regression", metrics
+    evidence = pd.DataFrame({"actual": y_test.to_numpy(), "prediction": pred})
+    return model, CORRECTED_FEATURES, "runtime coordinate-safe Linear Regression", metrics, evidence
+
+
+def transformed_feature_effects(active_model):
+    try:
+        preprocess = active_model.named_steps["preprocess"]
+        estimator = active_model.named_steps["model"]
+        names = preprocess.get_feature_names_out()
+        if hasattr(estimator, "coef_"):
+            values = np.ravel(estimator.coef_)
+            label = "Coefficient"
+        elif hasattr(estimator, "feature_importances_"):
+            values = np.ravel(estimator.feature_importances_)
+            label = "Importance"
+        else:
+            return pd.DataFrame(), None
+        if len(names) != len(values):
+            return pd.DataFrame(), None
+        effects = pd.DataFrame({"Feature": names, label: values})
+        effects["AbsoluteEffect"] = effects[label].abs()
+        effects["Feature"] = (
+            effects["Feature"].str.replace("cat__", "", regex=False).str.replace("num__", "", regex=False)
+        )
+        return effects.sort_values("AbsoluteEffect", ascending=False), label
+    except Exception:
+        return pd.DataFrame(), None
 
 
 try:
     df = load_data()
-    model, model_features, model_source, runtime_metrics = load_prediction_model()
+    model, model_features, model_source, runtime_metrics, holdout_predictions = load_prediction_model()
 except Exception as exc:
     st.error(f"Application initialization failed: {exc}")
     st.stop()
@@ -154,11 +179,9 @@ with pred_tab:
         "Pickup/drop-off coordinates are intentionally excluded from prediction because the supplied "
         "coordinates are not internally consistent with the dataset's distance_km field."
     )
-
     cities = sorted(df["city"].dropna().unique().tolist())
     payments = sorted(df["payment_method"].dropna().unique().tolist())
     latest_pickup = df["pickup_time"].dropna().max()
-
     if not cities or not payments or pd.isna(latest_pickup):
         st.error("Prediction controls cannot be created because city, payment, or pickup-time data is unavailable.")
         st.stop()
@@ -187,7 +210,6 @@ with pred_tab:
         "is_weekend": int(dt.dayofweek >= 5),
         "is_rush_hour": int(dt.hour in [7, 8, 9, 16, 17, 18, 19]),
     }])
-
     missing_prediction_features = [f for f in model_features if f not in row.columns]
     if missing_prediction_features:
         st.error("Prediction form is missing model features: " + ", ".join(missing_prediction_features))
@@ -242,9 +264,8 @@ with dash_tab:
             st.pyplot(fig)
             plt.close(fig)
         with c2:
-            sample = filtered.dropna(subset=["distance_km", "fare_amount"]).sample(
-                min(5000, len(filtered.dropna(subset=["distance_km", "fare_amount"]))), random_state=42
-            )
+            scatter_data = filtered.dropna(subset=["distance_km", "fare_amount"])
+            sample = scatter_data.sample(min(5000, len(scatter_data)), random_state=42)
             fig, ax = plt.subplots(figsize=(7, 4))
             ax.scatter(sample["distance_km"], sample["fare_amount"], alpha=.4, s=10)
             ax.set(title="Fare vs supplied distance", xlabel="Distance (km)", ylabel="Fare")
@@ -266,6 +287,17 @@ with dash_tab:
             ax.set(title="Average fare by month", xlabel="Month", ylabel="Average fare")
             st.pyplot(fig)
             plt.close(fig)
+
+        st.markdown("### Average fare by day of week")
+        day_avg = filtered.groupby("day_name", as_index=False)["fare_amount"].mean()
+        day_avg["day_name"] = pd.Categorical(day_avg["day_name"], categories=DAY_ORDER, ordered=True)
+        day_avg = day_avg.sort_values("day_name")
+        fig, ax = plt.subplots(figsize=(9, 4))
+        ax.bar(day_avg["day_name"].astype(str), day_avg["fare_amount"])
+        ax.set(xlabel="Day of week", ylabel="Average fare")
+        ax.tick_params(axis="x", rotation=30)
+        st.pyplot(fig)
+        plt.close(fig)
 
         completed = filtered[filtered.status.eq("Completed")]
         if len(completed) > 1:
@@ -291,6 +323,29 @@ with model_tab:
             "Full model selection remains in train.py with training-only 5-fold CV."
         )
 
+    effects, effect_label = transformed_feature_effects(model)
+    if not effects.empty and effect_label:
+        st.markdown("### Feature influence / coefficients")
+        top_effects = effects.head(15).sort_values("AbsoluteEffect")
+        fig, ax = plt.subplots(figsize=(9, 6))
+        ax.barh(top_effects["Feature"], top_effects[effect_label])
+        ax.set(xlabel=effect_label, ylabel="Feature")
+        st.pyplot(fig)
+        plt.close(fig)
+        st.caption("For Linear Regression, coefficient magnitude reflects model influence after preprocessing; it is not causal importance.")
+
+    if not holdout_predictions.empty:
+        st.markdown("### Actual vs Predicted fares")
+        sample = holdout_predictions.sample(min(5000, len(holdout_predictions)), random_state=42)
+        lower = float(min(sample["actual"].min(), sample["prediction"].min()))
+        upper = float(max(sample["actual"].max(), sample["prediction"].max()))
+        fig, ax = plt.subplots(figsize=(7, 6))
+        ax.scatter(sample["actual"], sample["prediction"], alpha=.35, s=12)
+        ax.plot([lower, upper], [lower, upper], linestyle="--")
+        ax.set(xlabel="Actual fare", ylabel="Predicted fare", title="Actual vs Predicted")
+        st.pyplot(fig)
+        plt.close(fig)
+
     historical = meta.get("metrics", [])
     if historical:
         st.markdown("### Historical packaged baseline comparison")
@@ -309,6 +364,7 @@ with about_tab:
 - The supplied `distance_km` is strongly related to fare and is retained as the distance feature.
 - Pickup/drop-off coordinates are internally inconsistent with `distance_km`, so they are excluded from active prediction.
 - `train.py` performs training-only 5-fold cross-validation, selects the lowest mean CV RMSE, and evaluates the selected model once on the untouched holdout set.
+- The dashboard includes average fare by day of week, feature influence/coefficient evidence, and an Actual vs Predicted diagnostic.
 - Results are dataset-specific and should not be interpreted as real-world Uber pricing claims.
         """
     )
