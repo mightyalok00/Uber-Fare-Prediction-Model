@@ -8,6 +8,25 @@ An end-to-end regression portfolio project built from a supplied **50,000-trip d
 
 Estimate `fare_amount` from information available for a trip while demonstrating a reproducible machine-learning workflow suitable for technical review.
 
+## Dataset and assignment compatibility
+
+This repository is built around the **actual 50,000-row CSV supplied for the project**. The source schema differs from the commonly referenced Kaggle Uber Fares dataset, so the project follows the supplied data rather than inventing unavailable fields.
+
+### Source fields used
+
+The raw dataset contains trip identifiers, city, pickup/drop-off coordinates, supplied `distance_km`, `fare_amount`, trip status, payment method, pickup time, and drop time.
+
+### Important dataset differences
+
+- The source dataset does **not** contain `passenger_count`.
+- Passenger counts are therefore **not fabricated, imputed, or randomly generated**.
+- Passenger-count distribution, fare-vs-passenger-count analysis, and passenger-count business conclusions are intentionally excluded because there is no ground-truth passenger-count field.
+- The source dataset already contains `distance_km`; this is treated as the primary planned trip-distance feature.
+- Coordinate-derived straight-line/Haversine distance may be used for validation or exploratory comparison, but it is not falsely presented as the original route-distance field.
+- The project therefore reflects the supplied 50K dataset rather than claiming to use an unrelated ~200K Kaggle dataset.
+
+This keeps the analysis technically honest and reproducible.
+
 ## Dataset and modeling scope
 
 - Original dataset: approximately **50,000 trips**
@@ -20,9 +39,27 @@ Estimate `fare_amount` from information available for a trip while demonstrating
 - Preprocessing is fitted inside scikit-learn pipelines
 - Passenger count is not fabricated because it is absent from the supplied dataset
 
+## Business questions answered
+
+This project is designed to answer the business questions that are supported by the supplied data:
+
+- What factors most strongly influence predicted Uber fares?
+- How does trip distance relate to fare amount?
+- Which pickup hours tend to have higher average fares?
+- How do fares vary by day of week and month?
+- Which regression model performs best under training-only cross-validation?
+- How accurate is the final selected model on an untouched holdout set?
+- Can the saved model provide a reasonable fare estimate for a new trip?
+
+### Business question not answerable from this dataset
+
+**Does passenger count significantly affect fare?**
+
+This cannot be answered reliably because the supplied CSV does not contain `passenger_count`. Any conclusion would require genuine passenger-count labels from another dataset. The project intentionally avoids unsupported conclusions.
+
 ## Modeling methodology
 
-`train.py` now uses a stricter evaluation design:
+`train.py` uses a stricter evaluation design:
 
 1. Create one 80/20 train/test split.
 2. Keep the test partition untouched during model selection.
@@ -111,7 +148,11 @@ Uber-Fare-Prediction-Model/
 
 ## Limitations
 
-This is an educational dataset and should not be interpreted as a model of real Uber pricing. The project demonstrates regression methodology and engineering practice, not a production pricing system. A production system would require real operational data, temporal/geographic validation, monitoring, drift detection, security controls, automated CI/CD, and ongoing model governance.
+- The supplied dataset does not include passenger count, so passenger-count analysis is outside the scope of this version.
+- `distance_km` is supplied by the dataset and is not claimed to be reconstructed from coordinates.
+- The dataset is educational and should not be interpreted as a production Uber pricing dataset.
+- Real-world fares may also depend on ride category, surge pricing, traffic, tolls, weather, local demand, and other operational variables that are not available here.
+- A production system would require temporal/geographic validation, monitoring, drift detection, security controls, automated CI/CD, and ongoing model governance.
 
 ## Author
 
