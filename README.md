@@ -112,19 +112,54 @@ The model uses trip/location, distance, payment/city, and pickup-time-derived fe
 
 The supplied `distance_km` is treated as planned route distance. Coordinate-derived straight-line distance is not used as a substitute for the supplied route-distance field.
 
+## Streamlit application
+
+Run locally with:
+
+```powershell
+python -m streamlit run app/app.py
+```
+
+The app includes four sections:
+
+- **Predict Fare** — generates a fare estimate from pre-trip inputs.
+- **Business Dashboard** — filters and explores fares, distance, city, status, payment method, pickup hour, and date.
+- **Model Performance** — displays the packaged historical model-comparison evidence.
+- **About** — documents dataset scope and limitations.
+
+### App validation safeguards
+
+The Streamlit app now validates:
+
+- required model, metadata, and cleaned dataset files exist;
+- required dataset columns exist;
+- `model_metadata.json` contains a non-empty feature list;
+- the prediction form contains every feature expected by the packaged model;
+- prediction inputs are ordered according to model metadata;
+- coordinate-derived Haversine distance is shown only as reference and does not replace the supplied route distance automatically.
+
+The packaged metadata contains historical baseline metrics. For new model-selection runs, `train.py` is the authoritative reproducible workflow.
+
 ## Repository structure
 
 ```text
 Uber-Fare-Prediction-Model/
-├── app/                 # Streamlit prediction/dashboard app
-├── dataset/             # Source and prepared datasets
-├── doc/                 # Validation and project documentation
-├── images/charts/       # Analysis visuals
-├── models/              # Packaged model and supporting artifacts
-├── notebooks/           # EDA and modeling notebook
-├── train.py             # Reproducible CV + final-test training workflow
-├── requirements.txt
-├── PROJECT_SUMMARY.txt
+├── .github/              # Repository automation/configuration
+├── app/
+│   └── app.py            # Streamlit prediction + dashboard application
+├── dataset/              # Raw, cleaned and training-ready datasets
+├── doc/                  # Reports, validation evidence and project summary
+│   ├── PROJECT_SUMMARY.txt
+│   ├── VALIDATION_REPORT.md
+│   └── ...
+├── images/
+│   └── charts/           # Analysis and model visuals
+├── models/               # Saved model, metadata, examples and prediction evidence
+├── notebooks/
+│   └── Uber_Fare_Prediction.ipynb
+├── train.py              # Reproducible CV + final-test training workflow
+├── requirements.txt      # Verified environment dependencies
+├── .gitignore
 └── README.md
 ```
 
