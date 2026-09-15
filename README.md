@@ -1,6 +1,6 @@
 # 🚕 Uber Fare Prediction Model
 
-An end-to-end regression portfolio project built from an **instructor-provided 50,000-trip dataset**, covering data validation, feature engineering, leakage-aware preprocessing, training-only cross-validation, final holdout evaluation, model persistence, reproducibility, and Streamlit deployment.
+An end-to-end regression portfolio project built from an **instructor-provided 50,000-trip educational dataset**, covering validation, feature engineering, leakage-aware preprocessing, training-only cross-validation, final holdout evaluation, reproducibility, and Streamlit deployment.
 
 🌐 **Live demo:** https://uber-fare-prediction-model.streamlit.app/
 
@@ -8,67 +8,66 @@ An end-to-end regression portfolio project built from an **instructor-provided 5
 
 Estimate `fare_amount` from information available before or at trip start while demonstrating a reproducible machine-learning workflow suitable for technical review.
 
-## Key Findings / Business Impact
+## Key findings
 
-- **Trip distance is the strongest observed fare driver**, with a Pearson correlation of approximately **0.871** on valid completed rides.
-- **Linear Regression** is the strongest packaged baseline model by RMSE, with **MAE 2.474**, **RMSE 3.093**, and **R² 0.754**.
-- The analysis identifies time-based fare patterns, including the highest average fare at **06:00**, on **Monday**, and in **January** for this dataset.
-- The deployed Streamlit app turns the analysis into a usable business tool by supporting interactive exploration and **new-trip fare estimation**.
-- The workflow is designed for reproducibility and leakage control, making the project suitable for portfolio and technical-review use.
+- **Trip distance is the strongest observed fare driver**, with Pearson correlation of approximately **0.871** on valid completed rides.
+- The historical packaged baseline identified **Linear Regression** as the strongest of the three compared models by RMSE: **MAE 2.474**, **RMSE 3.093**, **R² 0.754**.
+- The dataset shows time-based fare patterns, including the highest average fare at **06:00**, on **Monday**, and in **January**.
+- The Streamlit app provides interactive exploration and new-trip fare estimation.
 
-> These findings are specific to the instructor-provided educational dataset and are not claims about real-world Uber pricing.
+> Findings are specific to the supplied educational dataset and are not claims about real-world Uber pricing.
 
-## Dataset and assignment compatibility
+## Dataset integrity decisions
 
-This repository is built around the **actual 50,000-row CSV supplied by the instructor**. That file is the authoritative dataset for this project.
+The raw dataset contains trip identifiers, city, pickup/drop-off coordinates, supplied `distance_km`, `fare_amount`, status, payment method, pickup time, and drop time.
 
-The raw dataset contains trip identifiers, city, pickup/drop-off coordinates, supplied `distance_km`, `fare_amount`, trip status, payment method, pickup time, and drop time.
+Two important limitations are handled explicitly:
 
-### Important dataset notes
+1. **Passenger count is absent.** The project does not fabricate, impute, or randomly generate `passenger_count`. Passenger-count distribution, fare-vs-passenger-count analysis, and passenger-count business conclusions are therefore not applicable to this supplied dataset.
+2. **Coordinates and supplied distance are internally inconsistent.** The stored `distance_km` and coordinate-derived straight-line distance have almost no relationship in this synthetic dataset. Coordinates are therefore **excluded from active fare prediction**. The supplied `distance_km` remains the distance feature because it is the field actually associated with fare.
 
-- The source dataset does **not** contain `passenger_count`.
-- Passenger counts are therefore **not fabricated, imputed, or randomly generated**.
-- Passenger-count distribution, fare-vs-passenger-count analysis, and passenger-count business conclusions are marked **not applicable to the supplied data**.
-- The source dataset already contains `distance_km`; it is treated as the primary planned trip-distance feature.
-- Coordinate-derived straight-line/Haversine distance may be used for reference or validation, but it is not falsely presented as the original route-distance field.
-
-See [`doc/ASSIGNMENT_COVERAGE.md`](doc/ASSIGNMENT_COVERAGE.md) for the requirement-by-requirement mapping.
+See [`doc/ASSIGNMENT_COVERAGE.md`](doc/ASSIGNMENT_COVERAGE.md) and [`doc/uber_dataset_quality_report.txt`](doc/uber_dataset_quality_report.txt).
 
 ## Dataset and modeling scope
 
 - Original dataset: **50,000 trips**
-- Clean records retained: **49,997**
+- Valid cleaned rows: **49,997**
 - Completed trips used for modeling: **42,538**
 - Train/test split: **80:20**, `random_state=42`
 - Training rows: **34,030**
-- Final holdout rows: **8,508**
-- Trip IDs are checked for train/test separation
-- Preprocessing is fitted inside scikit-learn pipelines
-- Passenger count is intentionally excluded because it is absent from the instructor-provided data
+- Holdout rows: **8,508**
+- Trip IDs checked for train/test separation
+- Preprocessing fitted inside scikit-learn pipelines
 
-## Business questions answered
+## Coordinate-safe prediction features
 
-The project answers every requested question that is supported by the supplied data:
+Current `train.py` uses:
 
-- What factors most strongly influence predicted Uber fares?
-- How does trip distance relate to fare amount?
-- Which pickup hours have higher average fares?
-- How do fares vary by day of week?
-- How do fares vary by month?
-- What relationships appear in the numeric correlation matrix?
-- Which regression model performs best?
-- How accurate is the final selected model?
-- Can the saved model provide a reasonable fare estimate for a new trip?
+- city
+- payment method
+- supplied `distance_km`
+- pickup year
+- pickup month
+- pickup day
+- pickup hour
+- day of week
+- weekend indicator
+- rush-hour indicator
 
-### Passenger-count question
+The following are intentionally excluded from prediction:
 
-**Does passenger count significantly affect fare?**
-
-This cannot be answered reliably because the instructor-provided CSV does not contain `passenger_count`. Any conclusion would require genuine passenger-count labels from another dataset. This project intentionally avoids unsupported conclusions.
+- pickup latitude / longitude
+- drop-off latitude / longitude
+- passenger count (not present)
+- actual duration
+- drop time
+- trip status
+- trip IDs
+- fare-derived fields
 
 ## Modeling methodology
 
-`train.py` uses a stricter evaluation design:
+`train.py` follows this evaluation design:
 
 1. Create one 80/20 train/test split.
 2. Keep the test partition untouched during model selection.
@@ -79,11 +78,9 @@ This cannot be answered reliably because the instructor-provided CSV does not co
 7. Evaluate it once on the held-out test set.
 8. Save/reload the pipeline and verify prediction consistency.
 
-This avoids selecting a model by repeatedly inspecting the final test set.
+## Historical packaged baseline
 
-## Previously verified baseline results
-
-Before the training-only CV selection upgrade, the same fixed 80/20 split produced:
+The repository retains an older packaged `.pkl` and comparison metrics for reproducibility. That historical artifact included coordinate columns before the coordinate-quality issue was fully addressed.
 
 | Model | MAE | MSE | RMSE | R² |
 | --- | ---: | ---: | ---: | ---: |
@@ -91,86 +88,30 @@ Before the training-only CV selection upgrade, the same fixed 80/20 split produc
 | Gradient Boosting | 2.475648 | 9.595738 | 3.097699 | 0.753504 |
 | Random Forest | 2.511922 | 9.981314 | 3.159322 | 0.743600 |
 
-These values are retained as a **historical baseline**. Run `train.py` to generate current cross-validation and final-test artifacts for a new run.
+These values are historical evidence, not fresh coordinate-safe CV results.
 
 > R² is not percentage accuracy. MAE and RMSE are regression error measures in fare units.
 
-## Features
-
-The model uses:
-
-- city
-- payment method
-- pickup/drop-off latitude and longitude
-- supplied `distance_km`
-- pickup year, month, day and hour
-- day of week
-- weekend indicator
-- rush-hour indicator
-
-Post-trip or leakage-prone information such as actual duration, drop time, trip status, IDs, and fare-derived fields is excluded from the prediction feature set.
-
 ## Streamlit application
 
-Run locally with:
+Run locally:
 
 ```powershell
 python -m streamlit run app/app.py
 ```
 
-The app contains four sections:
+The app has four sections:
 
-### 🚕 Predict Fare
+- **Predict Fare** — city, payment method, pickup date/time, planned trip distance, and derived time indicators. Coordinates are not requested.
+- **Business Dashboard** — filters, fare distribution, fare-vs-distance, time-based analysis, and correlations.
+- **Model Performance** — active coordinate-safe model information, holdout metrics, and historical comparison evidence.
+- **About** — dataset scope and limitations.
 
-- city and payment-method selection
-- pickup and drop-off coordinates
-- pickup date/time
-- planned trip distance
-- derived weekend and rush-hour indicators
-- new-trip fare prediction
+### Live-app coordinate fix
 
-### 📊 Business Dashboard
+If the repository still contains the older coordinate-dependent packaged model, the Streamlit app **does not use it for live prediction**. It detects the legacy feature list and builds a coordinate-safe Linear Regression from the cleaned completed-trip data using the corrected feature set. Once a newly generated coordinate-safe model artifact is placed in `models/`, the app can use that packaged model directly.
 
-- interactive filters for city, status, payment method, distance, fare, hour and date
-- fare distribution
-- trip-distance distribution
-- fare vs distance
-- average fare by hour
-- average fare by day of week
-- average fare by month
-- average fare by city
-- correlation matrix
-- direct business-answer metrics for distance correlation, highest-fare hour, day and month
-- filtered-data download
-
-### 🤖 Model Performance
-
-- model comparison table
-- MAE, MSE, RMSE and R²
-- feature coefficient / importance visualization
-- Actual vs Predicted chart
-- leakage-prevention note
-- model feature list
-
-### ℹ️ About
-
-- instructor-provided 50K dataset scope
-- passenger-count limitation
-- distance-field interpretation
-- educational-data limitation
-
-### App validation safeguards
-
-The app validates:
-
-- required model, metadata and cleaned dataset files exist;
-- required dataset columns exist;
-- `model_metadata.json` contains a non-empty feature list;
-- the prediction form contains every feature expected by the packaged model;
-- prediction inputs are ordered according to model metadata;
-- Haversine distance is shown only as reference and does not replace supplied `distance_km`.
-
-## Reproduce training
+## Reproduce coordinate-safe training
 
 ```powershell
 py -m venv .venv
@@ -178,7 +119,7 @@ py -m venv .venv
 .\.venv\Scripts\python.exe train.py --output-dir work/run_001
 ```
 
-Each run generates:
+A run generates:
 
 - `cross_validation_results.csv`
 - `final_test_metrics.csv`
@@ -188,59 +129,37 @@ Each run generates:
 - `example_prediction.json`
 - `test_predictions.csv`
 
-Use a new or empty output directory for each run.
+## Business questions answered
+
+The repository answers every requested question supported by the supplied data, including fare distribution, distance distribution, fare vs distance, fare by hour/day/month, correlations, model comparison, regression metrics, feature influence, and new-trip prediction.
+
+The three passenger-count questions remain correctly marked **not applicable** because the source CSV does not contain genuine passenger-count labels.
 
 ## Repository structure
 
 ```text
 Uber-Fare-Prediction-Model/
-├── .github/              # Repository automation/configuration
+├── .github/              # CI checks
 ├── app/
-│   └── app.py            # Streamlit prediction + analytics application
-├── dataset/              # Raw, cleaned and training-ready datasets
-├── doc/
-│   ├── ASSIGNMENT_COVERAGE.md
-│   ├── PROJECT_SUMMARY.txt
-│   ├── VALIDATION_REPORT.md
-│   └── ...               # Business/validation reports
-├── images/
-│   └── charts/           # Analysis and model visuals
-├── models/               # Saved model, metadata and prediction evidence
+│   └── app.py            # Coordinate-safe Streamlit app
+├── dataset/              # Raw, cleaned and training-ready data
+├── doc/                  # Assignment, validation and quality documentation
+├── images/               # Project visuals
+├── models/               # Packaged/historical model evidence
 ├── notebooks/
 │   └── Uber_Fare_Prediction.ipynb
-├── train.py              # Reproducible CV + final-test training workflow
+├── train.py              # Coordinate-safe CV + holdout workflow
 ├── requirements.txt
-├── .gitignore
 └── README.md
 ```
 
-## Technical evidence
-
-- Data integrity and provenance checks
-- Feature engineering verification
-- Train/test ID separation
-- Pipeline-based preprocessing
-- Independent model pipelines
-- 5-fold training-only cross-validation
-- MAE, MSE, RMSE and R² reporting
-- Untouched final holdout evaluation
-- Saved-model persistence verification
-- Feature-effect/model-importance visualization
-- Actual vs Predicted visualization
-- Streamlit deployment
-- Reproducible output artifacts
-
-## Tech stack
-
-`Python` `Pandas` `NumPy` `scikit-learn` `Matplotlib` `Jupyter Notebook` `Joblib` `Streamlit`
-
 ## Limitations
 
-- The supplied dataset does not include passenger count, so passenger-count analysis is outside the scope of this version.
-- `distance_km` is supplied by the dataset and is not claimed to be reconstructed from coordinates.
-- The dataset is educational and should not be interpreted as a production Uber pricing dataset.
-- Real-world fares may also depend on ride category, surge pricing, traffic, tolls, weather, local demand and other operational variables not available here.
-- A production system would require temporal/geographic validation, monitoring, drift detection, security controls, automated CI/CD and ongoing model governance.
+- `passenger_count` is unavailable.
+- Coordinate columns are inconsistent with `distance_km` and are excluded from prediction.
+- The dataset is educational/synthetic.
+- Real-world fares may depend on ride category, surge, traffic, tolls, weather, local demand, and other unavailable variables.
+- A production system would require temporal/geographic validation, monitoring, drift detection, security controls, CI/CD, and ongoing model governance.
 
 ## Author
 
