@@ -1,28 +1,19 @@
 # Documentation Guide
 
-This folder contains both current project documentation and older imported report artifacts. Use the status below to avoid mixing historical wording with the current modeling workflow.
+This folder contains the current documentation for the Uber Fare Prediction Model.
 
-## Current source-of-truth documents
+## Source-of-truth documents
 
-| File | Status | Purpose |
-| --- | --- | --- |
-| `../README.md` | Current | Main project overview, findings, limitations and usage |
-| `../train.py` | Current | Authoritative training/evaluation implementation |
-| `ASSIGNMENT_COVERAGE.md` | Current | Requirement-by-requirement assignment mapping |
-| `VALIDATION_REPORT.md` | Current | Validation, provenance and current methodology |
-| `PROJECT_SUMMARY.txt` | Current | Concise project summary |
-| `PASSENGER_COUNT_NOTE.txt` | Current | Explains why passenger count is not available or reconstructable |
-| `uber_dataset_quality_report.txt` | Current | Dataset quality and distance/coordinate integrity findings |
-
-## Historical imported reports
-
-The following files are retained as project-history artifacts and may contain wording from an earlier model-selection workflow:
-
-- `Uber Prediction.docx`
-- `Uber_Fare_Prediction_Business_Analysis_Report.docx`
-- `Uber_Fare_Prediction_Business_Analysis_Report.pdf`
-
-When any historical report conflicts with the current source-of-truth files, the current files listed above take precedence.
+| File | Purpose |
+| --- | --- |
+| `../README.md` | Main project overview, findings, limitations and usage |
+| `../train.py` | Authoritative training and evaluation implementation |
+| `ASSIGNMENT_COVERAGE.md` | Requirement-by-requirement assignment mapping |
+| `CURRENT_REPORT.md` | Current technical and business report |
+| `VALIDATION_REPORT.md` | Validation, provenance and methodology checks |
+| `PROJECT_SUMMARY.txt` | Concise project summary |
+| `PASSENGER_COUNT_NOTE.txt` | Explains why passenger count is unavailable and cannot be reconstructed |
+| `uber_dataset_quality_report.txt` | Dataset quality and distance/coordinate integrity findings |
 
 ## Current modeling methodology
 
@@ -30,11 +21,11 @@ When any historical report conflicts with the current source-of-truth files, the
 2. Validate and clean the source data.
 3. Use 42,538 valid Completed rides for modeling.
 4. Split once into 34,030 training rows and 8,508 holdout test rows (`test_size=0.20`, `random_state=42`).
-5. Compare Linear Regression, Random Forest and Gradient Boosting with 5-fold KFold cross-validation on the training partition only (`shuffle=True`, `random_state=42`).
+5. Compare Linear Regression, Random Forest and Gradient Boosting using 5-fold KFold cross-validation on the training partition only (`shuffle=True`, `random_state=42`).
 6. Select the model with the lowest mean CV RMSE.
-7. Fit the selected pipeline on the full training partition.
+7. Fit the selected pipeline on the complete training partition.
 8. Evaluate it once on the untouched holdout test set.
-9. Save/reload the pipeline and verify prediction consistency.
+9. Save and reload the pipeline and verify prediction consistency.
 
 ## Dataset limitations
 
