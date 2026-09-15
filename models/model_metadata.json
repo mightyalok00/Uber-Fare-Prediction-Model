@@ -1,5 +1,6 @@
 {
   "best_model": "Linear Regression",
+  "artifact_status": "historical_packaged_baseline",
   "features": [
     "city",
     "payment_method",
@@ -82,5 +83,6 @@
     "RMSE": 3.0929213709963554,
     "R2": 0.7542642125779195
   },
-  "note": "Passenger count is absent. Model selection uses this same test split; scores are selection-set estimates, not an independent final benchmark."
+  "current_training_methodology": "Model selection in train.py uses 5-fold cross-validation on the training partition only, selects the lowest mean CV RMSE, then evaluates the selected model once on the untouched holdout test set.",
+  "note": "This metadata file describes the historical packaged baseline artifact retained in models/. Its fixed-split metrics are preserved for reproducibility. For current model-selection methodology and fresh CV/final-test results, run train.py into a new or empty output directory and use the generated model_metadata.json there. Passenger count is absent from the supplied dataset and is not fabricated."
 }
