@@ -8,6 +8,16 @@ An end-to-end regression portfolio project built from an **instructor-provided 5
 
 Estimate `fare_amount` from information available before or at trip start while demonstrating a reproducible machine-learning workflow suitable for technical review.
 
+## Key Findings / Business Impact
+
+- **Trip distance is the strongest observed fare driver**, with a Pearson correlation of approximately **0.871** on valid completed rides.
+- **Linear Regression** is the strongest packaged baseline model by RMSE, with **MAE 2.474**, **RMSE 3.093**, and **R² 0.754**.
+- The analysis identifies time-based fare patterns, including the highest average fare at **06:00**, on **Monday**, and in **January** for this dataset.
+- The deployed Streamlit app turns the analysis into a usable business tool by supporting interactive exploration and **new-trip fare estimation**.
+- The workflow is designed for reproducibility and leakage control, making the project suitable for portfolio and technical-review use.
+
+> These findings are specific to the instructor-provided educational dataset and are not claims about real-world Uber pricing.
+
 ## Dataset and assignment compatibility
 
 This repository is built around the **actual 50,000-row CSV supplied by the instructor**. That file is the authoritative dataset for this project.
@@ -35,20 +45,6 @@ See [`doc/ASSIGNMENT_COVERAGE.md`](doc/ASSIGNMENT_COVERAGE.md) for the requireme
 - Trip IDs are checked for train/test separation
 - Preprocessing is fitted inside scikit-learn pipelines
 - Passenger count is intentionally excluded because it is absent from the instructor-provided data
-
-## Key business findings
-
-Using valid **Completed** rides from the supplied dataset:
-
-- Fare and supplied trip distance have a strong positive relationship, with Pearson correlation of approximately **0.871**.
-- **06:00** has the highest average fare among pickup hours in the current completed-ride data.
-- **Monday** has the highest average fare among days of the week.
-- **January** has the highest average fare among months.
-- The packaged baseline comparison identifies **Linear Regression** as the best of the three compared models by RMSE.
-- Baseline Linear Regression results: **MAE 2.474**, **RMSE 3.093**, **R² 0.754**.
-- The saved model can generate a new-trip fare estimate in the Streamlit app.
-
-These are findings from this educational dataset and are not claims about real-world Uber pricing.
 
 ## Business questions answered
 
