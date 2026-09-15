@@ -23,17 +23,25 @@ CORRECTED_FEATURES = [
     "pickup_day", "pickup_hour", "day_of_week", "is_weekend", "is_rush_hour"
 ]
 LEGACY_COORDS = ["pickup_lat", "pickup_lng", "drop_lat", "drop_lng"]
+REQUIRED_SOURCE_COLUMNS = {
+    "city", "payment_method", "distance_km", "fare_amount", "status",
+    "pickup_time", "drop_time"
+}
 
 st.set_page_config(page_title="Uber Fare Intelligence", page_icon="🚕", layout="wide")
 
 if not DATA_PATH.exists():
-    st.error("Required dataset file is missing.")
+    st.error("Required dataset file is missing: dataset/uber_trips_dataset_50k_cleaned.csv")
     st.stop()
 
 
 @st.cache_data
 def load_data():
     data = pd.read_csv(DATA_PATH)
+    missing = sorted(REQUIRED_SOURCE_COLUMNS.difference(data.columns))
+    if missing:
+        raise ValueError("Dataset is missing required columns: " + ", ".join(missing))
+
     data["pickup_time"] = pd.to_datetime(data["pickup_time"], errors="coerce")
     data["drop_time"] = pd.to_datetime(data["drop_time"], errors="coerce")
     data["pickup_year"] = data["pickup_time"].dt.year
@@ -55,7 +63,10 @@ def load_data():
 def load_meta():
     if not META_PATH.exists():
         return {}
-    return json.loads(META_PATH.read_text(encoding="utf-8"))
+    try:
+        return json.loads(META_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
 
 
 def build_corrected_pipeline():
@@ -72,16 +83,29 @@ def build_corrected_pipeline():
 
 
 @st.cache_resource
-def load_prediction_model(data):
+def load_prediction_model():
+    data = load_data()
     meta = load_meta()
     packaged_features = meta.get("features", [])
 
-    if MODEL_PATH.exists() and packaged_features and not any(c in packaged_features for c in LEGACY_COORDS):
-        return joblib.load(MODEL_PATH), packaged_features, "packaged coordinate-safe model", None
+    if (
+        MODEL_PATH.exists()
+        and isinstance(packaged_features, list)
+        and packaged_features
+        and not any(c in packaged_features for c in LEGACY_COORDS)
+    ):
+        try:
+            packaged = joblib.load(MODEL_PATH)
+            return packaged, packaged_features, "packaged coordinate-safe model", None
+        except Exception:
+            pass
 
     completed = data[data["status"].eq("Completed")].dropna(
         subset=CORRECTED_FEATURES + ["fare_amount"]
     ).copy()
+    if len(completed) < 10:
+        raise ValueError("Not enough valid Completed trips are available to build the prediction model.")
+
     X_train, X_test, y_train, y_test = train_test_split(
         completed[CORRECTED_FEATURES], completed["fare_amount"],
         test_size=0.20, random_state=42, shuffle=True
@@ -99,8 +123,13 @@ def load_prediction_model(data):
     return model, CORRECTED_FEATURES, "runtime coordinate-safe Linear Regression", metrics
 
 
-df = load_data()
-model, model_features, model_source, runtime_metrics = load_prediction_model(df)
+try:
+    df = load_data()
+    model, model_features, model_source, runtime_metrics = load_prediction_model()
+except Exception as exc:
+    st.error(f"Application initialization failed: {exc}")
+    st.stop()
+
 meta = load_meta()
 
 st.markdown(
@@ -122,13 +151,17 @@ pred_tab, dash_tab, model_tab, about_tab = st.tabs(
 with pred_tab:
     st.subheader("Estimate a fare before the trip starts")
     st.info(
-        "Pickup/drop-off coordinates are intentionally not used for prediction because the supplied "
+        "Pickup/drop-off coordinates are intentionally excluded from prediction because the supplied "
         "coordinates are not internally consistent with the dataset's distance_km field."
     )
 
     cities = sorted(df["city"].dropna().unique().tolist())
     payments = sorted(df["payment_method"].dropna().unique().tolist())
     latest_pickup = df["pickup_time"].dropna().max()
+
+    if not cities or not payments or pd.isna(latest_pickup):
+        st.error("Prediction controls cannot be created because city, payment, or pickup-time data is unavailable.")
+        st.stop()
 
     c1, c2 = st.columns(2)
     with c1:
@@ -155,6 +188,11 @@ with pred_tab:
         "is_rush_hour": int(dt.hour in [7, 8, 9, 16, 17, 18, 19]),
     }])
 
+    missing_prediction_features = [f for f in model_features if f not in row.columns]
+    if missing_prediction_features:
+        st.error("Prediction form is missing model features: " + ", ".join(missing_prediction_features))
+        st.stop()
+
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Distance", f"{distance:.2f} km")
     m2.metric("Pickup hour", f"{dt.hour:02d}:00")
@@ -162,9 +200,14 @@ with pred_tab:
     m4.metric("Rush hour", "Yes" if dt.hour in [7, 8, 9, 16, 17, 18, 19] else "No")
 
     if st.button("Predict fare", type="primary", width="stretch"):
-        pred = float(model.predict(row[model_features])[0])
-        st.success(f"Estimated fare: ${pred:,.2f}")
-        st.caption(f"Prediction source: {model_source}. Educational dataset; not a live Uber quote.")
+        try:
+            pred = float(model.predict(row[model_features])[0])
+            if not np.isfinite(pred):
+                raise ValueError("model returned a non-finite prediction")
+            st.success(f"Estimated fare: ${pred:,.2f}")
+            st.caption(f"Prediction source: {model_source}. Educational dataset; not a live Uber quote.")
+        except Exception as exc:
+            st.error(f"Prediction could not be generated: {exc}")
 
 with dash_tab:
     st.subheader("Explore the ride dataset")
@@ -194,12 +237,14 @@ with dash_tab:
         c1, c2 = st.columns(2)
         with c1:
             fig, ax = plt.subplots(figsize=(7, 4))
-            ax.hist(filtered["fare_amount"], bins=30)
+            ax.hist(filtered["fare_amount"].dropna(), bins=30)
             ax.set(title="Fare distribution", xlabel="Fare", ylabel="Trips")
             st.pyplot(fig)
             plt.close(fig)
         with c2:
-            sample = filtered.sample(min(5000, len(filtered)), random_state=42)
+            sample = filtered.dropna(subset=["distance_km", "fare_amount"]).sample(
+                min(5000, len(filtered.dropna(subset=["distance_km", "fare_amount"]))), random_state=42
+            )
             fig, ax = plt.subplots(figsize=(7, 4))
             ax.scatter(sample["distance_km"], sample["fare_amount"], alpha=.4, s=10)
             ax.set(title="Fare vs supplied distance", xlabel="Distance (km)", ylabel="Fare")
@@ -241,13 +286,19 @@ with model_tab:
         b.metric("MSE", f"{runtime_metrics['MSE']:.3f}")
         c.metric("RMSE", f"{runtime_metrics['RMSE']:.3f}")
         d.metric("R²", f"{runtime_metrics['R2']:.3f}")
-        st.caption("These metrics are for the coordinate-safe Linear Regression rebuilt on the same fixed 80/20 split. Full model selection remains in train.py with training-only 5-fold CV.")
+        st.caption(
+            "These metrics are for the coordinate-safe Linear Regression rebuilt on the same fixed 80/20 split. "
+            "Full model selection remains in train.py with training-only 5-fold CV."
+        )
 
     historical = meta.get("metrics", [])
     if historical:
         st.markdown("### Historical packaged baseline comparison")
         st.dataframe(pd.DataFrame(historical), width="stretch")
-        st.caption("Historical metrics are retained for reproducibility; the older packaged artifact included coordinate columns and is not used for live prediction when detected as legacy.")
+        st.caption(
+            "Historical metrics are retained for reproducibility; the older packaged artifact included coordinate "
+            "columns and is not used for live prediction when detected as legacy."
+        )
 
 with about_tab:
     st.subheader("Project scope and limitations")
