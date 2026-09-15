@@ -58,6 +58,11 @@ model = load_model()
 meta = load_meta()
 df = load_data()
 
+model_features = meta.get("features")
+if not isinstance(model_features, list) or not model_features:
+    st.error("Model metadata is invalid: a non-empty 'features' list is required.")
+    st.stop()
+
 required_columns = {
     "city", "payment_method", "pickup_lat", "pickup_lng", "drop_lat", "drop_lng",
     "distance_km", "fare_amount", "status", "pickup_time", "pickup_hour"
@@ -133,6 +138,11 @@ with pred_tab:
         "is_rush_hour": int(dt.hour in [7, 8, 9, 16, 17, 18, 19]),
     }])
 
+    missing_prediction_features = [feature for feature in model_features if feature not in row.columns]
+    if missing_prediction_features:
+        st.error("Prediction form is missing model features: " + ", ".join(missing_prediction_features))
+        st.stop()
+
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Distance", f"{distance:.2f} km")
     m2.metric("Pickup hour", f"{dt.hour:02d}:00")
@@ -141,7 +151,7 @@ with pred_tab:
 
     if st.button("Predict fare", type="primary", width="stretch"):
         try:
-            pred = float(model.predict(row[meta["features"]])[0])
+            pred = float(model.predict(row[model_features])[0])
             st.success(f"Estimated fare: ${pred:,.2f}")
             st.caption("Portfolio/demo estimate from the supplied 50K educational dataset; not a live Uber quote.")
         except Exception as exc:
@@ -223,10 +233,11 @@ with dash_tab:
 
 with model_tab:
     st.subheader("Packaged model evidence")
-    metrics = pd.DataFrame(meta.get("metrics", [])).sort_values("RMSE")
-    if metrics.empty:
+    metrics = pd.DataFrame(meta.get("metrics", []))
+    if metrics.empty or "RMSE" not in metrics.columns:
         st.warning("No packaged model metrics were found in model_metadata.json.")
     else:
+        metrics = metrics.sort_values("RMSE")
         st.caption("These are the packaged historical holdout-comparison metrics. The current train.py uses training-only 5-fold CV for model selection and an untouched final holdout evaluation.")
         st.dataframe(metrics.style.format({"MAE": "{:.3f}", "MSE": "{:.3f}", "RMSE": "{:.3f}", "R2": "{:.4f}"}), width="stretch")
         best = metrics.iloc[0]
@@ -237,7 +248,7 @@ with model_tab:
         c4.metric("R²", f"{best.R2:.4f}")
 
     st.info("Training is restricted to Completed trips. IDs, trip status, actual drop time, and actual trip duration are excluded from prediction features to reduce leakage.")
-    st.write("**Training features:**", ", ".join(meta.get("features", [])))
+    st.write("**Training features:**", ", ".join(model_features))
 
 with about_tab:
     st.subheader("Project notes")
@@ -248,4 +259,5 @@ with about_tab:
 - Completed rides are used for fare-model training; cancelled/no-show rides remain available for dashboard exploration.
 - The dataset is educational/synthetic and should not be interpreted as a production Uber pricing system.
 - Post-trip fields such as actual drop time and duration are not used to estimate fare before a trip starts.
+- The packaged model metadata contains historical baseline metrics; `train.py` is the authoritative reproducible training workflow for new runs.
 """)
