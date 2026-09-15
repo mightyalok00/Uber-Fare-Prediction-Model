@@ -1,0 +1,32 @@
+Uber Fare Prediction Model — project summary
+
+Repository: mightyalok00/Uber-Fare-Prediction-Model
+Dataset: supplied 50,000-trip educational CSV
+Clean records retained: 49,997
+Completed trips used for modeling: 42,538
+Baseline split: 34,030 train / 8,508 test, random_state=42, with no trip-ID overlap
+Packaged baseline model: Linear Regression
+Historical baseline metrics: MAE 2.4738024474; MSE 9.5661626072; RMSE 3.0929213710; R2 0.7542642126
+Saved-model load/predict verification: PASS
+Persistence round-trip verification: PASS
+
+Current training methodology:
+- 80/20 train/test split
+- 5-fold KFold cross-validation on the training partition only
+- Linear Regression, Random Forest and Gradient Boosting comparison
+- lowest mean CV RMSE used for model selection
+- one final evaluation on the untouched holdout set
+- saved/reloaded pipeline prediction consistency check
+
+Dataset scope note:
+- passenger_count is not present in the supplied source data and is not fabricated
+- distance_km is supplied by the dataset and is treated as planned route distance
+- coordinate-derived straight-line distance is for validation/reference only
+
+Reproduce training:
+python train.py --output-dir work/run_001
+
+Run Streamlit:
+python -m streamlit run app/app.py
+
+See README.md and doc/VALIDATION_REPORT.md for methodology, evidence, limitations and interpretation guidance.
