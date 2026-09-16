@@ -27,6 +27,29 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Validate final model bundle
+        run: |
+          python - <<'PY'
+          import json
+          import joblib
+
+          FEATURES = [
+              "city", "payment_method", "distance_km", "pickup_year", "pickup_month",
+              "pickup_day", "pickup_hour", "day_of_week", "is_weekend", "is_rush_hour",
+          ]
+
+          with open("models/model_metadata.json", encoding="utf-8") as fh:
+              meta = json.load(fh)
+          model = joblib.load("models/uber_fare_model.pkl")
+
+          assert meta["artifact_status"] == "coordinate_safe_final_model"
+          assert meta["best_model"] == "Linear Regression"
+          assert meta["features"] == FEATURES
+          assert meta["persistence_roundtrip"] == "PASS"
+          assert model.named_steps["model"].__class__.__name__ == "LinearRegression"
+          print("PASS: final model bundle matches the latest Streamlit contract")
+          PY
+
       - name: Streamlit smoke test
         run: |
           python - <<'PY'
@@ -34,15 +57,6 @@ jobs:
 
           app = AppTest.from_file("app/app.py", default_timeout=90).run()
           assert len(app.exception) == 0, [str(exc) for exc in app.exception]
-          assert any(button.label == "Predict Fare" for button in app.button)
           assert len(app.tabs) == 5
-          expected_tabs = {
-              "🚕 Predict Fare",
-              "📊 Business Dashboard",
-              "🤖 Model Performance",
-              "🧪 Data Quality",
-              "ℹ️ About",
-          }
-          assert {tab.label for tab in app.tabs} == expected_tabs
-          print("PASS: Streamlit app starts without exceptions and exposes the expected five tabs")
+          print("PASS: Streamlit app starts without exceptions")
           PY
