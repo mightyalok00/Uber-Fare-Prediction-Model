@@ -1,13 +1,10 @@
 {
   "best_model": "Linear Regression",
-  "artifact_status": "historical_packaged_baseline_coordinate_dependent",
+  "artifact_status": "coordinate_safe_final_model",
+  "selection_method": "5-fold cross-validation on training partition; lowest mean CV RMSE",
   "features": [
     "city",
     "payment_method",
-    "pickup_lat",
-    "pickup_lng",
-    "drop_lat",
-    "drop_lng",
     "distance_km",
     "pickup_year",
     "pickup_month",
@@ -17,12 +14,24 @@
     "is_weekend",
     "is_rush_hour"
   ],
-  "categorical_features": ["city", "payment_method"],
+  "excluded_features": [
+    "pickup_lat",
+    "pickup_lng",
+    "drop_lat",
+    "drop_lng",
+    "passenger_count",
+    "drop_time",
+    "status",
+    "trip_id",
+    "driver_id",
+    "rider_id"
+  ],
+  "exclusion_reason": "Coordinates are range-valid but not internally consistent with supplied distance_km; passenger_count is absent.",
+  "categorical_features": [
+    "city",
+    "payment_method"
+  ],
   "numeric_features": [
-    "pickup_lat",
-    "pickup_lng",
-    "drop_lat",
-    "drop_lng",
     "distance_km",
     "pickup_year",
     "pickup_month",
@@ -32,22 +41,67 @@
     "is_weekend",
     "is_rush_hour"
   ],
-  "metrics": [
-    {"Model": "Linear Regression", "MAE": 2.4738024473744527, "MSE": 9.566162607165975, "RMSE": 3.0929213709963554, "R2": 0.7542642125779195},
-    {"Model": "Gradient Boosting", "MAE": 2.4756482748273747, "MSE": 9.595738004486272, "RMSE": 3.0976988240444343, "R2": 0.7535044791458974},
-    {"Model": "Random Forest", "MAE": 2.511922156254814, "MSE": 9.981313722218445, "RMSE": 3.159321718695082, "R2": 0.7435998019520587}
+  "cross_validation": [
+    {
+      "Model": "Linear Regression",
+      "CV_MAE_Mean": 2.4740027581,
+      "CV_MAE_Std": 0.0118150051,
+      "CV_RMSE_Mean": 3.0867622669,
+      "CV_RMSE_Std": 0.0095080309,
+      "CV_R2_Mean": 0.759022767,
+      "CV_R2_Std": 0.0030913671
+    },
+    {
+      "Model": "Gradient Boosting",
+      "CV_MAE_Mean": 2.4761407465,
+      "CV_MAE_Std": 0.0094752317,
+      "CV_RMSE_Mean": 3.0911245509,
+      "CV_RMSE_Std": 0.0077524175,
+      "CV_R2_Mean": 0.7583413966,
+      "CV_R2_Std": 0.0030199719
+    },
+    {
+      "Model": "Random Forest",
+      "CV_MAE_Mean": 2.5272224002,
+      "CV_MAE_Std": 0.0126930435,
+      "CV_RMSE_Mean": 3.177422898,
+      "CV_RMSE_Std": 0.0137304981,
+      "CV_R2_Mean": 0.7446549391,
+      "CV_R2_Std": 0.0037676066
+    }
   ],
+  "final_test_metrics": {
+    "MAE": 2.4735770025331614,
+    "MSE": 9.56673627511006,
+    "RMSE": 3.0930141084563547,
+    "R2": 0.7542494761836361
+  },
   "training_rows": 34030,
   "testing_rows": 8508,
   "completed_model_rows": 42538,
-  "split": {"test_size": 0.2, "random_state": 42, "shuffle": true},
-  "dataset_sha256": "2a81c5d96f8ea39f37769a850b2ea97775d396a8e2f0097a565c4725be37196e",
-  "persistence_roundtrip": "PASS",
-  "coordinate_policy": {
-    "status": "legacy_artifact_only",
-    "reason": "The supplied pickup/drop-off coordinates are not internally consistent with distance_km and are excluded from the current train.py feature set.",
-    "live_app_behavior": "The Streamlit app detects this legacy coordinate-dependent metadata and rebuilds a coordinate-safe Linear Regression for live prediction instead of using this packaged artifact."
+  "raw_rows": 50000,
+  "valid_clean_rows": 49997,
+  "split": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "shuffle": true
   },
-  "current_training_methodology": "train.py excludes pickup/drop-off coordinates, uses 5-fold cross-validation on the training partition only, selects the lowest mean CV RMSE, and evaluates the selected model once on the untouched holdout test set.",
-  "note": "This metadata describes a retained historical baseline artifact. It must not be presented as the current coordinate-safe production model. Passenger count is absent from the supplied dataset and is not fabricated."
+  "cv": {
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42
+  },
+  "dataset_sha256": "ba581435d6cf9c7c6565bfd493e4eb2681a429f078d8a97374cc5fba514b95a8",
+  "haversine_vs_supplied_distance_correlation": 0.0015628140655711432,
+  "haversine_within_0_1_km_share": 0.01502,
+  "fare_vs_supplied_distance_correlation": 0.870746281265475,
+  "python": "3.13.5",
+  "versions": {
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.8.0",
+    "joblib": "1.5.3"
+  },
+  "persistence_roundtrip": "PASS",
+  "note": "Final coordinate-safe model. Passenger count is absent and not fabricated. Coordinates are used only for data-quality diagnostics, not prediction."
 }
