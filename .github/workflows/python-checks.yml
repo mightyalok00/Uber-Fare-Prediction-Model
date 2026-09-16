@@ -5,7 +5,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   checks:
@@ -26,6 +26,27 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+
+      - name: Regenerate final model under CI Python
+        if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[model-generated]')
+        run: |
+          rm -rf models_ci
+          python train.py --output-dir models_ci
+          cp models_ci/uber_fare_model.pkl models/uber_fare_model.pkl
+          cp models_ci/model_metadata.json models/model_metadata.json
+          cp models_ci/cross_validation_results.csv models/cross_validation_results.csv
+          cp models_ci/model_comparison.csv models/model_comparison.csv
+          cp models_ci/final_test_metrics.csv models/final_test_metrics.csv
+          cp models_ci/example_input.csv models/example_input.csv
+          cp models_ci/example_prediction.json models/example_prediction.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/uber_fare_model.pkl models/model_metadata.json models/cross_validation_results.csv models/model_comparison.csv models/final_test_metrics.csv models/example_input.csv models/example_prediction.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate final model with Python 3.12 [model-generated]"
+            git push
+          fi
 
       - name: Validate final model bundle
         run: |
