@@ -25,7 +25,7 @@ jobs:
       - name: Install runtime dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install streamlit pandas numpy scikit-learn joblib matplotlib
+          python -m pip install -r requirements.txt
 
       - name: Streamlit smoke test
         run: |
@@ -34,7 +34,15 @@ jobs:
 
           app = AppTest.from_file("app/app.py", default_timeout=90).run()
           assert len(app.exception) == 0, [str(exc) for exc in app.exception]
-          assert any(button.label == "Predict fare" for button in app.button)
-          assert len(app.tabs) == 4
-          print("PASS: Streamlit app starts without exceptions")
+          assert any(button.label == "Predict Fare" for button in app.button)
+          assert len(app.tabs) == 5
+          expected_tabs = {
+              "🚕 Predict Fare",
+              "📊 Business Dashboard",
+              "🤖 Model Performance",
+              "🧪 Data Quality",
+              "ℹ️ About",
+          }
+          assert {tab.label for tab in app.tabs} == expected_tabs
+          print("PASS: Streamlit app starts without exceptions and exposes the expected five tabs")
           PY
