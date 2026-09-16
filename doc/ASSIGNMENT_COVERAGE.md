@@ -1,52 +1,77 @@
 # Assignment Coverage
 
-This project is evaluated against the instructor-provided **50,000-row Uber trip dataset**. The supplied CSV is the authoritative source for the project.
+This project is evaluated against the instructor-provided **50,000-row Uber trip dataset**. The supplied CSV is the authoritative source for implementation.
 
-## Coverage summary
+## Coverage Summary
 
-| Requirement / question | Status | Evidence |
+| Requirement / Question | Status | Evidence |
 | --- | --- | --- |
-| Load and understand the dataset | Complete | Notebook, validation report, cleaned datasets |
-| Check shape, columns, dtypes, missing values and duplicates | Complete | Notebook and validation report |
-| Handle invalid fares, distances, coordinates and timestamps | Complete | Cleaning workflow and `train.py` validation |
-| Create pickup year/month/day/hour/day-of-week features | Complete | Training-ready dataset and `train.py` |
-| Analyze fare distribution | Complete | Notebook and Streamlit Business Dashboard |
-| Analyze trip-distance distribution | Complete | Notebook and Streamlit Business Dashboard |
-| Analyze fare vs distance | Complete | Notebook and Streamlit Business Dashboard |
-| Analyze fare by pickup hour | Complete | Notebook and Streamlit Business Dashboard |
-| Analyze fare by day of week | Complete | Streamlit Business Dashboard |
-| Analyze fare by month | Complete | Streamlit Business Dashboard |
-| Correlation analysis | Complete | Streamlit Business Dashboard |
-| Linear Regression | Complete | Notebook, `train.py`, packaged model evidence |
-| Random Forest Regressor | Complete | Notebook and `train.py` |
-| Gradient Boosting Regressor | Complete | Notebook and `train.py` |
-| MAE, MSE, RMSE and R² | Complete | Model metadata and Streamlit Model Performance tab |
-| Compare models and identify the best model | Complete | Model comparison and training workflow |
-| Estimate fare for a new trip | Complete | Streamlit Predict Fare tab |
-| Show model influence / feature importance | Complete | Streamlit Model Performance tab |
-| Actual vs Predicted visualization | Complete | Streamlit Model Performance tab |
-| Passenger-count distribution | Not applicable to supplied data | `passenger_count` is absent from the instructor-provided CSV |
-| Fare vs passenger count | Not applicable to supplied data | No ground-truth passenger-count field exists |
-| Passenger-count business conclusion | Not applicable to supplied data | No supported conclusion can be made without labels |
+| Load dataset and inspect structure | Complete | Notebook |
+| Shape, columns, dtypes, missing, duplicates, descriptive statistics | Complete | Notebook / validation |
+| Missing/invalid coordinates | Complete | Validation and Haversine diagnostic |
+| Invalid passenger counts | Not applicable | `passenger_count` absent from supplied CSV |
+| Negative/extreme fares | Complete | Cleaning/EDA |
+| Invalid latitude/longitude | Complete | Training validation |
+| Duplicate records | Complete | Validation |
+| pickup year/month/day/hour/day-of-week | Complete | Notebook / `train.py` |
+| Coordinate-derived `trip_distance` | Complete as diagnostic | Haversine distance calculated and compared with supplied `distance_km` |
+| Fare distribution | Complete | Notebook / Streamlit |
+| Passenger-count distribution | N/A | Source column absent |
+| Fare vs distance | Complete | Notebook / Streamlit |
+| Fare vs passenger count | N/A | Source column absent |
+| Fare by hour/day/month | Complete | Notebook / Streamlit |
+| Trip-distance distribution | Complete | Notebook / Streamlit |
+| Correlation matrix | Complete | Notebook / Streamlit |
+| Linear Regression | Complete | Training pipeline |
+| Random Forest | Complete | Training pipeline |
+| Gradient Boosting | Complete | Training pipeline |
+| MAE/MSE/RMSE/R² | Complete | Final metrics |
+| Compare models | Complete | Training-only 5-fold CV |
+| Best model | Complete | Linear Regression |
+| Feature influence | Complete | Streamlit Model Performance |
+| Actual vs Predicted | Complete | Untouched holdout predictions |
+| New-trip fare estimate | Complete | Streamlit Predict Fare |
 
-## Business findings from the supplied data
+## Verified Final Results
 
-Using valid **Completed** rides from the supplied dataset:
+- Raw rows: **50,000**
+- Valid cleaned rows: **49,997**
+- Completed modeling rows: **42,538**
+- Training rows: **34,030**
+- Holdout rows: **8,508**
+- Best model by training-only 5-fold CV RMSE: **Linear Regression**
+- Final holdout MAE: **2.474**
+- Final holdout MSE: **9.567**
+- Final holdout RMSE: **3.093**
+- Final holdout R²: **0.754**
 
-- **42,538** completed rides are available for modeling after validation.
-- Fare and supplied trip distance have a strong positive relationship; the observed Pearson correlation is approximately **0.871** on the completed valid rides.
-- In the current full completed-ride dataset, **06:00** has the highest average fare among pickup hours.
-- **Monday** has the highest average fare among days of the week in the current data.
-- **January** has the highest average fare among months in the current data.
-- The packaged baseline comparison identifies **Linear Regression** as the best of the three compared models by RMSE, with MAE ≈ **2.474**, RMSE ≈ **3.093**, and R² ≈ **0.754**.
-- The Streamlit app can generate a fare estimate for a new trip from pre-trip inputs.
+## Business Questions — Final Answers
 
-These are dataset-specific findings, not claims about Uber pricing in the real world.
+1. **What factors most strongly influence Uber fares?**  
+   Supplied trip distance is the strongest supported observed signal. The app also displays transformed model coefficients as influence diagnostics, without claiming causality.
 
-## Passenger-count limitation
+2. **How does trip distance affect fare?**  
+   Fare and supplied `distance_km` have a strong positive relationship (Pearson correlation ≈ **0.871**).
 
-The instructor-provided 50K CSV does not contain a `passenger_count` column. The project therefore does **not** fabricate, randomly generate, or infer passenger counts. Any passenger-count analysis would require a different labeled source dataset and would no longer be an analysis of the instructor-provided data.
+3. **Does passenger count significantly affect fare?**  
+   **Cannot be determined** because `passenger_count` is absent from the supplied dataset.
 
-## Distance note
+4. **Which hours have higher average fares?**  
+   **06:00** has the highest average fare in the full valid completed-ride data.
 
-The supplied dataset already contains `distance_km`, which is used as the planned route-distance feature. Coordinate-derived Haversine distance may be used for reference or validation, but it is not presented as a replacement for the supplied route-distance field.
+5. **Which model performs best?**  
+   **Linear Regression**, selected using the lowest mean 5-fold CV RMSE on the training partition.
+
+6. **How accurate is the final model?**  
+   Untouched holdout: MAE **2.474**, RMSE **3.093**, R² **0.754**.
+
+7. **Can the model provide a reasonable fare estimate for a new trip?**  
+   **Yes.** The Streamlit app loads the final saved model and predicts a new fare from supported pre-trip inputs.
+
+## Passenger-Count Limitation
+
+The assignment describes a Kaggle-style schema containing `passenger_count`, but the actual instructor-provided 50K CSV does not contain it. The project therefore does not fabricate, infer, or randomly generate passenger counts.
+
+## Coordinate-Distance Decision
+
+Haversine distance is calculated to fulfill the assignment's coordinate-engineering requirement as a diagnostic. It is not used for prediction because its correlation with supplied `distance_km` is only **0.0016**, with just **1.50%** of rows within 0.1 km. The supplied `distance_km` is retained for prediction because it is the supported route-distance field associated with fare.
