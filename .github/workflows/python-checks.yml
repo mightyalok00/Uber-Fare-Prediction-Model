@@ -17,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14.7"
 
       - name: Compile Python source
         run: python -m py_compile train.py app/app.py
@@ -44,7 +44,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add models/uber_fare_model.pkl models/model_metadata.json models/cross_validation_results.csv models/model_comparison.csv models/final_test_metrics.csv models/example_input.csv models/example_prediction.json
           if ! git diff --cached --quiet; then
-            git commit -m "Regenerate final model with Python 3.12 [model-generated]"
+            git commit -m "Regenerate final model with Python 3.14.7 [model-generated]"
             git push
           fi
 
@@ -67,8 +67,9 @@ jobs:
           assert meta["best_model"] == "Linear Regression"
           assert meta["features"] == FEATURES
           assert meta["persistence_roundtrip"] == "PASS"
+          assert meta["python"] == "3.14.7"
           assert model.named_steps["model"].__class__.__name__ == "LinearRegression"
-          print("PASS: final model bundle matches the latest Streamlit contract")
+          print("PASS: final model bundle matches Python 3.14.7 and the latest Streamlit contract")
           PY
 
       - name: Streamlit smoke test
