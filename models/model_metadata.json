@@ -26,7 +26,7 @@
     "driver_id",
     "rider_id"
   ],
-  "exclusion_reason": "Coordinates are range-valid but not internally consistent with supplied distance_km; passenger_count is absent.",
+  "exclusion_reason": "Coordinates are range-valid but internally inconsistent with supplied distance_km; passenger_count is absent from the supplied dataset.",
   "categorical_features": [
     "city",
     "payment_method"
@@ -44,30 +44,30 @@
   "cross_validation": [
     {
       "Model": "Linear Regression",
-      "CV_MAE_Mean": 2.4740027581,
-      "CV_MAE_Std": 0.0118150051,
-      "CV_RMSE_Mean": 3.0867622669,
-      "CV_RMSE_Std": 0.0095080309,
-      "CV_R2_Mean": 0.759022767,
-      "CV_R2_Std": 0.0030913671
+      "CV_MAE_Mean": 2.4740027581345205,
+      "CV_MAE_Std": 0.011815005114116097,
+      "CV_RMSE_Mean": 3.086762266855577,
+      "CV_RMSE_Std": 0.00950803085057836,
+      "CV_R2_Mean": 0.7590227669511376,
+      "CV_R2_Std": 0.003091367133377407
     },
     {
       "Model": "Gradient Boosting",
-      "CV_MAE_Mean": 2.4761407465,
-      "CV_MAE_Std": 0.0094752317,
-      "CV_RMSE_Mean": 3.0911245509,
-      "CV_RMSE_Std": 0.0077524175,
-      "CV_R2_Mean": 0.7583413966,
-      "CV_R2_Std": 0.0030199719
+      "CV_MAE_Mean": 2.476140746508886,
+      "CV_MAE_Std": 0.009475231726233067,
+      "CV_RMSE_Mean": 3.0911245508959824,
+      "CV_RMSE_Std": 0.007752417529145032,
+      "CV_R2_Mean": 0.7583413966471259,
+      "CV_R2_Std": 0.003019971875161761
     },
     {
       "Model": "Random Forest",
-      "CV_MAE_Mean": 2.5272224002,
-      "CV_MAE_Std": 0.0126930435,
-      "CV_RMSE_Mean": 3.177422898,
-      "CV_RMSE_Std": 0.0137304981,
-      "CV_R2_Mean": 0.7446549391,
-      "CV_R2_Std": 0.0037676066
+      "CV_MAE_Mean": 2.5272224002405523,
+      "CV_MAE_Std": 0.012693043456745837,
+      "CV_RMSE_Mean": 3.1774228979640524,
+      "CV_RMSE_Std": 0.013730498149533914,
+      "CV_R2_Mean": 0.7446549390638899,
+      "CV_R2_Std": 0.0037676065877897463
     }
   ],
   "final_test_metrics": {
@@ -76,11 +76,11 @@
     "RMSE": 3.0930141084563547,
     "R2": 0.7542494761836361
   },
-  "training_rows": 34030,
-  "testing_rows": 8508,
-  "completed_model_rows": 42538,
   "raw_rows": 50000,
   "valid_clean_rows": 49997,
+  "completed_model_rows": 42538,
+  "training_rows": 34030,
+  "testing_rows": 8508,
   "split": {
     "test_size": 0.2,
     "random_state": 42,
@@ -92,10 +92,10 @@
     "random_state": 42
   },
   "dataset_sha256": "ba581435d6cf9c7c6565bfd493e4eb2681a429f078d8a97374cc5fba514b95a8",
-  "haversine_vs_supplied_distance_correlation": 0.0015628140655711432,
-  "haversine_within_0_1_km_share": 0.01502,
+  "haversine_vs_supplied_distance_correlation": 0.0006902359916106026,
+  "haversine_within_0_1_km_share": 0.015045371197517515,
   "fare_vs_supplied_distance_correlation": 0.870746281265475,
-  "python": "3.13.5",
+  "python": "3.12.14",
   "versions": {
     "numpy": "2.3.5",
     "pandas": "2.2.3",
@@ -103,5 +103,5 @@
     "joblib": "1.5.3"
   },
   "persistence_roundtrip": "PASS",
-  "note": "Final coordinate-safe model. Passenger count is absent and not fabricated. Coordinates are used only for data-quality diagnostics, not prediction."
+  "note": "Final coordinate-safe model. Passenger count is absent and not fabricated. Haversine distance is retained as a validation diagnostic only."
 }
