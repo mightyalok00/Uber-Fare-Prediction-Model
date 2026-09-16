@@ -5,16 +5,71 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  checks:
+  training-reproducibility:
+    name: Train and validate on Python 3.12
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Python source
+        run: python -m py_compile train.py app/app.py
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Reproduce training in a temporary directory
+        run: |
+          rm -rf models_ci
+          python train.py --output-dir models_ci
+
+      - name: Validate reproduced model bundle
+        run: |
+          python - <<'PY'
+          import json
+          import joblib
+          import numpy as np
+          import pandas as pd
+
+          FEATURES = [
+              "city", "payment_method", "distance_km", "pickup_year", "pickup_month",
+              "pickup_day", "pickup_hour", "day_of_week", "is_weekend", "is_rush_hour",
+          ]
+
+          with open("models_ci/model_metadata.json", encoding="utf-8") as fh:
+              meta = json.load(fh)
+          model = joblib.load("models_ci/uber_fare_model.pkl")
+          example = pd.read_csv("models_ci/example_input.csv")
+          prediction = model.predict(example)
+
+          assert meta["artifact_status"] == "coordinate_safe_final_model"
+          assert meta["best_model"] == "Linear Regression"
+          assert meta["features"] == FEATURES
+          assert meta["persistence_roundtrip"] == "PASS"
+          assert meta["python"].startswith("3.12.")
+          assert model.named_steps["model"].__class__.__name__ == "LinearRegression"
+          assert np.isfinite(prediction).all()
+          print("PASS: training is reproducible under Python 3.12")
+          PY
+
+  python-314-compatibility:
+    name: Validate app and saved model on Python 3.14.7
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14.7
         uses: actions/setup-python@v5
         with:
           python-version: "3.14.7"
@@ -27,32 +82,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Regenerate final model under CI Python
-        if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[model-generated]')
-        run: |
-          rm -rf models_ci
-          python train.py --output-dir models_ci
-          cp models_ci/uber_fare_model.pkl models/uber_fare_model.pkl
-          cp models_ci/model_metadata.json models/model_metadata.json
-          cp models_ci/cross_validation_results.csv models/cross_validation_results.csv
-          cp models_ci/model_comparison.csv models/model_comparison.csv
-          cp models_ci/final_test_metrics.csv models/final_test_metrics.csv
-          cp models_ci/example_input.csv models/example_input.csv
-          cp models_ci/example_prediction.json models/example_prediction.json
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add models/uber_fare_model.pkl models/model_metadata.json models/cross_validation_results.csv models/model_comparison.csv models/final_test_metrics.csv models/example_input.csv models/example_prediction.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Regenerate final model with Python 3.14.7 [model-generated]"
-            git push
-          fi
-
-      - name: Validate final model bundle
+      - name: Validate committed model bundle under Python 3.14.7
         run: |
           python - <<'PY'
           import json
           import joblib
+          import numpy as np
+          import pandas as pd
 
           FEATURES = [
               "city", "payment_method", "distance_km", "pickup_year", "pickup_month",
@@ -62,14 +98,17 @@ jobs:
           with open("models/model_metadata.json", encoding="utf-8") as fh:
               meta = json.load(fh)
           model = joblib.load("models/uber_fare_model.pkl")
+          example = pd.read_csv("models/example_input.csv")
+          prediction = model.predict(example)
 
           assert meta["artifact_status"] == "coordinate_safe_final_model"
           assert meta["best_model"] == "Linear Regression"
           assert meta["features"] == FEATURES
           assert meta["persistence_roundtrip"] == "PASS"
-          assert meta["python"] == "3.14.7"
+          assert meta["python"].startswith("3.12.")
           assert model.named_steps["model"].__class__.__name__ == "LinearRegression"
-          print("PASS: final model bundle matches Python 3.14.7 and the latest Streamlit contract")
+          assert np.isfinite(prediction).all()
+          print("PASS: Python 3.12-trained model loads and predicts under Python 3.14.7")
           PY
 
       - name: Streamlit smoke test
@@ -80,5 +119,5 @@ jobs:
           app = AppTest.from_file("app/app.py", default_timeout=90).run()
           assert len(app.exception) == 0, [str(exc) for exc in app.exception]
           assert len(app.tabs) == 5
-          print("PASS: Streamlit app starts without exceptions")
+          print("PASS: Streamlit app starts without exceptions on Python 3.14.7")
           PY
