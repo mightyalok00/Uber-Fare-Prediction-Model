@@ -7,12 +7,12 @@ This project is evaluated against the instructor-provided **50,000-row Uber trip
 | Requirement / Question | Status | Evidence |
 | --- | --- | --- |
 | Load dataset and inspect structure | Complete | Notebook |
-| Shape, columns, dtypes, missing, duplicates, descriptive statistics | Complete | Notebook / validation |
-| Missing/invalid coordinates | Complete | Validation and Haversine diagnostic |
+| Shape, columns, dtypes, missing, duplicates, descriptive statistics | Complete | Notebook |
+| Missing/invalid coordinates | Complete | Notebook / `train.py` |
 | Invalid passenger counts | Not applicable | `passenger_count` absent from supplied CSV |
-| Negative/extreme fares | Complete | Cleaning/EDA |
-| Invalid latitude/longitude | Complete | Training validation |
-| Duplicate records | Complete | Validation |
+| Negative/non-positive fares | Complete | `train.py` validation |
+| Invalid latitude/longitude | Complete | `train.py` validation |
+| Duplicate records | Complete | Notebook / `train.py` |
 | pickup year/month/day/hour/day-of-week | Complete | Notebook / `train.py` |
 | Coordinate-derived `trip_distance` | Complete as diagnostic | Haversine distance calculated and compared with supplied `distance_km` |
 | Fare distribution | Complete | Notebook / Streamlit |
@@ -22,14 +22,14 @@ This project is evaluated against the instructor-provided **50,000-row Uber trip
 | Fare by hour/day/month | Complete | Notebook / Streamlit |
 | Trip-distance distribution | Complete | Notebook / Streamlit |
 | Correlation matrix | Complete | Notebook / Streamlit |
-| Linear Regression | Complete | Training pipeline |
-| Random Forest | Complete | Training pipeline |
-| Gradient Boosting | Complete | Training pipeline |
-| MAE/MSE/RMSE/R² | Complete | Final metrics |
+| Linear Regression | Complete | `train.py` |
+| Random Forest | Complete | `train.py` |
+| Gradient Boosting | Complete | `train.py` |
+| MAE/MSE/RMSE/R² | Complete | `models/final_test_metrics.csv` |
 | Compare models | Complete | Training-only 5-fold CV |
 | Best model | Complete | Linear Regression |
 | Feature influence | Complete | Streamlit Model Performance |
-| Actual vs Predicted | Complete | Untouched holdout predictions |
+| Actual vs Predicted | Complete | Saved final model + fixed untouched holdout |
 | New-trip fare estimate | Complete | Streamlit Predict Fare |
 
 ## Verified Final Results
@@ -51,7 +51,7 @@ This project is evaluated against the instructor-provided **50,000-row Uber trip
    Supplied trip distance is the strongest supported observed signal. The app also displays transformed model coefficients as influence diagnostics, without claiming causality.
 
 2. **How does trip distance affect fare?**  
-   Fare and supplied `distance_km` have a strong positive relationship (Pearson correlation ≈ **0.871**).
+   Fare and supplied `distance_km` have a strong positive relationship (Pearson correlation ≈ **0.871** on valid completed rides).
 
 3. **Does passenger count significantly affect fare?**  
    **Cannot be determined** because `passenger_count` is absent from the supplied dataset.
@@ -74,4 +74,11 @@ The assignment describes a Kaggle-style schema containing `passenger_count`, but
 
 ## Coordinate-Distance Decision
 
-Haversine distance is calculated to fulfill the assignment's coordinate-engineering requirement as a diagnostic. It is not used for prediction because its correlation with supplied `distance_km` is only **0.0016**, with just **1.50%** of rows within 0.1 km. The supplied `distance_km` is retained for prediction because it is the supported route-distance field associated with fare.
+Haversine distance is calculated to fulfill the assignment's coordinate-engineering requirement as a diagnostic. On the final completed modeling rows, its correlation with supplied `distance_km` is approximately **0.00069**, and only about **1.50%** of rows are within 0.1 km. The supplied `distance_km` is retained for prediction because it is the route-distance field associated with fare in this educational dataset.
+
+## Runtime / Reproducibility Strategy
+
+- The committed model is trained and serialization-tested under **Python 3.12**.
+- GitHub Actions independently reproduces training under Python 3.12.
+- A separate CI job validates that the committed model loads, predicts, and that Streamlit starts under **Python 3.14.7**.
+- Full model retraining is intentionally not performed under Python 3.14.7 because the current native scientific stack produced a segmentation fault during training on the hosted runner.
