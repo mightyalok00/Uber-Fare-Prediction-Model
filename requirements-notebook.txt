@@ -1,0 +1,6 @@
+# Optional local notebook tooling.
+-r requirements.txt
+jupyter>=1.1,<2
+nbformat==5.10.4
+nbclient==0.10.4
+ipykernel==7.2.0
