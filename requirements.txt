@@ -1,6 +1,7 @@
 # Runtime + model dependencies used by train.py, Streamlit, and CI.
 # Keep the authoritative training environment reproducible on Python 3.12,
 # while using a Python 3.14-compatible pandas wheel for Streamlit Cloud.
+# Deployment refresh marker: 2026-09-16.
 streamlit>=1.50,<2
 pandas==2.2.3; python_version < "3.14"
 pandas==2.3.3; python_version >= "3.14"
