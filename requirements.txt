@@ -1,10 +1,11 @@
 # Runtime + model dependencies used by train.py, Streamlit, and CI.
-# The committed model is trained under Python 3.12 and compatibility-tested on Python 3.14.7.
+# Keep the authoritative training environment reproducible on Python 3.12,
+# while using a Python 3.14-compatible pandas wheel for Streamlit Cloud.
 streamlit>=1.50,<2
-pandas==2.2.3
+pandas==2.2.3; python_version < "3.14"
+pandas==2.3.3; python_version >= "3.14"
 numpy==2.3.5
 scikit-learn==1.8.0
 joblib==1.5.3
 matplotlib==3.10.8
-seaborn==0.13.2
 scipy==1.17.0
