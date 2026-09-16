@@ -1,9 +1,8 @@
 """Streamlit dashboard and prediction app for the Uber Fare Prediction project.
 
-The app intentionally separates:
-1) prediction inputs available before a trip,
-2) exploratory filters for business analysis, and
-3) model-evaluation evidence from the untouched holdout set.
+This app is intentionally tied to the latest coordinate-safe model bundle in
+`models/`. At startup it validates the metadata, feature contract, model type,
+and persistence status so an older/legacy model cannot be used silently.
 """
 from pathlib import Path
 import json
@@ -21,6 +20,8 @@ META_PATH = BASE / "models" / "model_metadata.json"
 CV_PATH = BASE / "models" / "cross_validation_results.csv"
 FINAL_METRICS_PATH = BASE / "models" / "final_test_metrics.csv"
 
+EXPECTED_ARTIFACT_STATUS = "coordinate_safe_final_model"
+EXPECTED_MODEL = "Linear Regression"
 FEATURES = [
     "city", "payment_method", "distance_km", "pickup_year", "pickup_month",
     "pickup_day", "pickup_hour", "day_of_week", "is_weekend", "is_rush_hour",
@@ -29,9 +30,6 @@ DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 
 st.set_page_config(page_title="Uber Fare Intelligence", page_icon="🚕", layout="wide")
 
-# -----------------------------
-# Global styling and alignment
-# -----------------------------
 st.markdown(
     """
     <style>
@@ -59,12 +57,10 @@ st.markdown(
 
 @st.cache_data
 def load_data() -> pd.DataFrame:
-    """Load the cleaned dataset and derive analysis-friendly date/time features."""
+    """Load the cleaned dataset and derive analysis/model time features."""
     df = pd.read_csv(DATA_PATH)
     df["pickup_time"] = pd.to_datetime(df["pickup_time"], errors="coerce")
     df["drop_time"] = pd.to_datetime(df["drop_time"], errors="coerce")
-
-    # Derive the same time features used by the training pipeline.
     df["pickup_year"] = df["pickup_time"].dt.year
     df["pickup_month"] = df["pickup_time"].dt.month
     df["pickup_day"] = df["pickup_time"].dt.day
@@ -80,40 +76,66 @@ def load_data() -> pd.DataFrame:
 
 @st.cache_resource
 def load_model():
-    """Load the final coordinate-safe serialized pipeline."""
+    """Load the repository's serialized final pipeline."""
     return joblib.load(MODEL_PATH)
 
 
 @st.cache_data
 def load_json(path: Path) -> dict:
-    """Load JSON metadata while keeping app startup resilient."""
+    """Load JSON metadata."""
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 @st.cache_data
 def load_optional_csv(path: Path) -> pd.DataFrame:
-    """Return an empty DataFrame when an optional evidence file is unavailable."""
+    """Load an evidence CSV when present."""
     return pd.read_csv(path) if path.exists() else pd.DataFrame()
+
+
+def validate_model_bundle(model, meta: dict) -> list[str]:
+    """Validate that Streamlit is using the latest approved model contract."""
+    errors: list[str] = []
+
+    if meta.get("artifact_status") != EXPECTED_ARTIFACT_STATUS:
+        errors.append(
+            f"artifact_status must be '{EXPECTED_ARTIFACT_STATUS}', got {meta.get('artifact_status')!r}."
+        )
+    if meta.get("best_model") != EXPECTED_MODEL:
+        errors.append(f"Expected '{EXPECTED_MODEL}', got {meta.get('best_model')!r}.")
+    if meta.get("features") != FEATURES:
+        errors.append("Metadata feature list does not match the current Streamlit feature contract.")
+    if meta.get("persistence_roundtrip") != "PASS":
+        errors.append("Saved-model persistence verification is not marked PASS.")
+
+    if not hasattr(model, "named_steps"):
+        errors.append("Saved artifact is not the expected scikit-learn Pipeline.")
+    else:
+        if "preprocess" not in model.named_steps or "model" not in model.named_steps:
+            errors.append("Pipeline must contain 'preprocess' and 'model' steps.")
+        else:
+            estimator_name = model.named_steps["model"].__class__.__name__
+            if estimator_name != "LinearRegression":
+                errors.append(f"Expected LinearRegression estimator, got {estimator_name}.")
+
+    return errors
 
 
 @st.cache_data
 def build_holdout_predictions(_model) -> pd.DataFrame:
-    """Recreate the fixed holdout split and score it with the saved final model."""
-    completed = data[data["status"].eq("Completed")].dropna(subset=FEATURES + ["fare_amount"]).copy()
+    """Recreate the fixed untouched holdout and score it using the saved model."""
     from sklearn.model_selection import train_test_split
+
+    completed = data[data["status"].eq("Completed")].dropna(subset=FEATURES + ["fare_amount"]).copy()
     _, X_test, _, y_test = train_test_split(
         completed[FEATURES], completed["fare_amount"],
         test_size=0.20, random_state=42, shuffle=True,
     )
     prediction = _model.predict(X_test)
-    return pd.DataFrame({
-        "actual": y_test.to_numpy(),
-        "prediction": prediction,
-    })
+    return pd.DataFrame({"actual": y_test.to_numpy(), "prediction": prediction})
 
 
 def get_feature_effects(model) -> tuple[pd.DataFrame, str | None]:
-    """Extract transformed-model coefficients/importances for diagnostic display."""
+    """Extract transformed coefficients/importances for model diagnostics."""
     try:
         preprocess = model.named_steps["preprocess"]
         estimator = model.named_steps["model"]
@@ -140,13 +162,18 @@ def get_feature_effects(model) -> tuple[pd.DataFrame, str | None]:
         return pd.DataFrame(), None
 
 
-# -----------------------------
-# Load authoritative app assets
-# -----------------------------
+# Load the latest model bundle and fail clearly if the deployment is stale.
 try:
     data = load_data()
-    model = load_model()
     meta = load_json(META_PATH)
+    model = load_model()
+    validation_errors = validate_model_bundle(model, meta)
+    if validation_errors:
+        st.error("The deployed model bundle is stale or inconsistent with the latest project model.")
+        for error in validation_errors:
+            st.write(f"- {error}")
+        st.stop()
+
     test_predictions = build_holdout_predictions(model)
     cv_results = load_optional_csv(CV_PATH)
     final_metrics = load_optional_csv(FINAL_METRICS_PATH)
@@ -164,9 +191,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# -----------------------------
-# Sidebar filters for dashboard
-# -----------------------------
+# Show the active model bundle so reviewers can verify the deployment at a glance.
+model_version_cols = st.columns(4)
+model_version_cols[0].metric("Active model", meta.get("best_model", "Unknown"))
+model_version_cols[1].metric("Artifact", "Final coordinate-safe")
+model_version_cols[2].metric("Training rows", f"{meta.get('training_rows', 0):,}")
+model_version_cols[3].metric("Holdout rows", f"{meta.get('testing_rows', 0):,}")
+
+# Sidebar filters affect business EDA only.
 st.sidebar.header("📌 Dashboard Filters")
 st.sidebar.caption("These filters affect the Business Dashboard only.")
 
@@ -180,10 +212,7 @@ selected_payments = st.sidebar.multiselect("Payment method", payments, default=p
 
 min_fare = float(data["fare_amount"].min())
 max_fare = float(data["fare_amount"].max())
-fare_range = st.sidebar.slider(
-    "Fare range", min_value=min_fare, max_value=max_fare,
-    value=(min_fare, max_fare)
-)
+fare_range = st.sidebar.slider("Fare range", min_value=min_fare, max_value=max_fare, value=(min_fare, max_fare))
 
 positive_distance = data.loc[data["distance_km"] > 0, "distance_km"]
 min_distance = float(positive_distance.min())
@@ -196,8 +225,7 @@ distance_range = st.sidebar.slider(
 date_min = data["pickup_time"].min().date()
 date_max = data["pickup_time"].max().date()
 date_range = st.sidebar.date_input(
-    "Pickup date range", value=(date_min, date_max),
-    min_value=date_min, max_value=date_max
+    "Pickup date range", value=(date_min, date_max), min_value=date_min, max_value=date_max
 )
 
 filtered = data[
@@ -210,9 +238,7 @@ filtered = data[
 
 if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
     start_date, end_date = date_range
-    filtered = filtered[
-        filtered["pickup_time"].dt.date.between(start_date, end_date)
-    ]
+    filtered = filtered[filtered["pickup_time"].dt.date.between(start_date, end_date)]
 
 st.sidebar.divider()
 st.sidebar.metric("Filtered trips", f"{len(filtered):,}")
@@ -223,14 +249,11 @@ predict_tab, dashboard_tab, model_tab, data_tab, about_tab = st.tabs(
     ["🚕 Predict Fare", "📊 Business Dashboard", "🤖 Model Performance", "🧪 Data Quality", "ℹ️ About"]
 )
 
-# -----------------------------
-# Tab 1: New-trip prediction
-# -----------------------------
 with predict_tab:
     st.subheader("Estimate a fare before the trip is completed")
     st.markdown(
-        '<div class="section-note">Coordinates are intentionally excluded because they are not internally consistent '
-        'with the supplied route-distance field. Passenger count is absent from the instructor dataset.</div>',
+        '<div class="section-note">This tab uses the latest saved coordinate-safe Linear Regression pipeline. '
+        'Coordinates are excluded because they conflict with the supplied route-distance field; passenger count is absent.</div>',
         unsafe_allow_html=True,
     )
 
@@ -246,17 +269,14 @@ with predict_tab:
     with right:
         prediction_max_distance = float(max(30, data["distance_km"].max()))
         distance = st.slider(
-            "Planned trip distance (km)",
-            min_value=0.1, max_value=prediction_max_distance,
-            value=7.0, step=0.1,
+            "Planned trip distance (km)", min_value=0.1,
+            max_value=prediction_max_distance, value=7.0, step=0.1,
         )
         st.caption("Uses the supplied planned route-distance field (`distance_km`).")
-
         dt = pd.Timestamp.combine(pickup_date, pickup_clock)
         st.metric("Day", dt.day_name())
         st.metric("Trip timing", "Rush hour" if dt.hour in [7, 8, 9, 16, 17, 18, 19] else "Non-rush hour")
 
-    # Build one row with exactly the features used by the saved training pipeline.
     row = pd.DataFrame([{
         "city": city,
         "payment_method": payment,
@@ -285,9 +305,6 @@ with predict_tab:
         else:
             st.error("The model returned a non-finite prediction.")
 
-# -----------------------------
-# Tab 2: Filtered business EDA
-# -----------------------------
 with dashboard_tab:
     st.subheader("Business Dashboard")
     st.caption("All charts in this tab respond to the sidebar filters.")
@@ -308,7 +325,6 @@ with dashboard_tab:
             ax.set(title="Fare Distribution", xlabel="Fare", ylabel="Trips")
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
-
         with c2:
             scatter = filtered.dropna(subset=["distance_km", "fare_amount"])
             sample = scatter.sample(min(5000, len(scatter)), random_state=42)
@@ -326,7 +342,6 @@ with dashboard_tab:
             ax.set(title="Average Fare by Pickup Hour", xlabel="Pickup hour", ylabel="Average fare")
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
-
         with c4:
             day_avg = filtered.groupby("day_name", as_index=False)["fare_amount"].mean()
             day_avg["day_name"] = pd.Categorical(day_avg["day_name"], categories=DAY_ORDER, ordered=True)
@@ -346,7 +361,6 @@ with dashboard_tab:
             ax.set(title="Average Fare by Month", xlabel="Month", ylabel="Average fare")
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
-
         with c6:
             fig, ax = plt.subplots(figsize=(7, 4))
             ax.hist(filtered["distance_km"].dropna(), bins=30)
@@ -360,15 +374,13 @@ with dashboard_tab:
         if len(completed) > 1:
             st.dataframe(completed[numeric_cols].corr().round(3), use_container_width=True)
 
-# -----------------------------
-# Tab 3: Final model evidence
-# -----------------------------
 with model_tab:
-    st.subheader("Final Model Performance")
+    st.subheader("Latest Final Model Performance")
     st.write(f"**Selected model:** {meta.get('best_model', 'Unknown')}")
+    st.write(f"**Artifact status:** `{meta.get('artifact_status', 'Unknown')}`")
     st.write(f"**Selection rule:** {meta.get('selection_method', 'Training-only cross-validation')}")
     st.write("**Active features:** " + ", ".join(meta.get("features", FEATURES)))
-    st.success("The saved model is the final coordinate-safe pipeline; latitude/longitude are not prediction inputs.")
+    st.success("Streamlit is using the final coordinate-safe saved pipeline from `models/uber_fare_model.pkl`.")
 
     if not final_metrics.empty:
         result = final_metrics.iloc[0]
@@ -382,7 +394,6 @@ with model_tab:
         st.markdown("#### Training-only 5-Fold Cross-Validation")
         display_cols = [c for c in cv_results.columns if c != "Unnamed: 0"]
         st.dataframe(cv_results[display_cols].round(4), use_container_width=True)
-
         fig, ax = plt.subplots(figsize=(8, 4))
         ordered = cv_results.sort_values("CV_RMSE_Mean", ascending=True)
         ax.barh(ordered["Model"], ordered["CV_RMSE_Mean"])
@@ -413,9 +424,6 @@ with model_tab:
         st.pyplot(fig, use_container_width=True)
         plt.close(fig)
 
-# -----------------------------
-# Tab 4: Data-quality diagnostics
-# -----------------------------
 with data_tab:
     st.subheader("Data Quality & Assignment Diagnostics")
     q1, q2, q3, q4 = st.columns(4)
@@ -443,17 +451,15 @@ with data_tab:
         "fare-vs-passenger analysis, and statistical conclusions are therefore correctly marked N/A."
     )
 
-# -----------------------------
-# Tab 5: Scope and limitations
-# -----------------------------
 with about_tab:
     st.subheader("Project Scope")
     st.markdown(
         """
         - Uses the instructor-provided **50,000-row educational dataset**.
+        - Streamlit loads the repository's **latest final coordinate-safe saved model**.
         - Predicts `fare_amount` using information available before or at trip start.
         - Model selection uses **5-fold cross-validation only on the training partition**.
-        - The final selected pipeline is evaluated **once on the untouched holdout set**.
+        - The selected pipeline is evaluated **once on the untouched holdout set**.
         - `passenger_count` is absent and is never fabricated.
         - Coordinates are retained for validation but excluded from active prediction because they conflict with supplied `distance_km`.
         - Results are dataset-specific and are not claims about real-world Uber pricing.
