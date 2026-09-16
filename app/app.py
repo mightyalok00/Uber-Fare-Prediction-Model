@@ -63,7 +63,7 @@ st.markdown(
     }
     .hero-grid {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         gap: 1rem;
         align-items: end;
     }
@@ -85,15 +85,6 @@ st.markdown(
         text-transform: uppercase;
         color: #a1a1aa;
         margin-bottom: .5rem;
-    }
-    .hero-badge {
-        display: inline-block;
-        padding: .5rem .78rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.18);
-        background: rgba(255,255,255,.05);
-        font-size: .82rem;
-        white-space: nowrap;
     }
     div[data-testid="stMetric"] {
         border: 1px solid var(--border);
@@ -333,7 +324,7 @@ date_min, date_max = data["pickup_time"].min().date(), data["pickup_time"].max()
 # Page identity
 # ---------------------------------------------------------------------------
 st.markdown(
-    f"""
+    """
     <div class="hero">
       <div class="hero-grid">
         <div>
@@ -341,18 +332,15 @@ st.markdown(
           <h1>Uber Fare Intelligence</h1>
           <p>Executive dashboard for fare behavior, trip operations, model performance, and new-trip fare simulation using the validated 50K educational dataset.</p>
         </div>
-        <div class="hero-badge">✓ {meta.get('best_model', 'Validated Model')}</div>
       </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-header_cols = st.columns(4)
-header_cols[0].metric("Model", meta.get("best_model", "Unknown"))
-header_cols[1].metric("Model status", "Validated")
-header_cols[2].metric("Training rows", f"{meta.get('training_rows', 0):,}")
-header_cols[3].metric("Holdout rows", f"{meta.get('testing_rows', 0):,}")
+header_cols = st.columns(2)
+header_cols[0].metric("Training rows", f"{meta.get('training_rows', 0):,}")
+header_cols[1].metric("Holdout rows", f"{meta.get('testing_rows', 0):,}")
 
 # ---------------------------------------------------------------------------
 # Sidebar control center
@@ -515,7 +503,7 @@ with dashboard_tab:
 
         k1, k2, k3, k4, k5 = st.columns(5)
         k1.metric("Trips", f"{len(filtered):,}", delta=f"{coverage:.1%} of data")
-        k2.metric("Average fare", f"${avg_fare:.2f}", delta=delta_value(avg_fare, baseline_avg_fare, prefix="") if False else delta_value(avg_fare, baseline_avg_fare))
+        k2.metric("Average fare", f"${avg_fare:.2f}", delta=delta_value(avg_fare, baseline_avg_fare))
         k3.metric("Average distance", f"{avg_distance:.2f} km", delta=delta_value(avg_distance, baseline_avg_distance, suffix=" km"))
         k4.metric("Completion rate", f"{completion:.1f}%", delta=delta_value(completion, baseline_completion, suffix=" pp"))
         k5.metric("Fare value", f"${total_fare:,.0f}")
