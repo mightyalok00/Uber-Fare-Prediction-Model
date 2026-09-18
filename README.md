@@ -18,6 +18,14 @@ Estimate `fare_amount` before a trip is completed using historical ride informat
 
 > These findings are specific to the supplied educational dataset and are not claims about Uber pricing in the real world.
 
+## ⭐ Project highlights
+
+- End-to-end regression workflow with training-only cross-validation and an untouched final test set.
+- Reproducible saved pipeline, data-quality checks, and documented limitations.
+- Interactive Streamlit fare-prediction and business-analysis application.
+
+**⭐ If this repository is useful to you, consider giving it a star.**
+
 ## Dataset vs Assignment
 
 The assignment describes a Kaggle-style Uber Fares dataset with approximately 200,000 rows and a `passenger_count` field. The actual instructor-provided CSV used here has **50,000 rows and 14 columns** and does **not** contain `passenger_count`.
