@@ -310,14 +310,17 @@ GitHub Actions validates the project in two paths:
 
 CI does not modify or commit repository files.
 
-## ⚠️ Limitations
+## 🎯 Scope & Considerations
 
-- The dataset is educational rather than a production Uber pricing dataset.
-- `passenger_count` is unavailable in the supplied CSV.
-- Coordinate-derived distance is inconsistent with supplied `distance_km`.
-- `payment_method` is assumed to be available for this educational prediction workflow.
-- Real-world fares may depend on ride category, surge, traffic, tolls, weather, demand and other variables not represented here.
-- Model performance should not be interpreted as guaranteed real-world pricing accuracy.
+This project is designed as an educational and portfolio demonstration of an end-to-end machine learning workflow. The following points define the scope of the analysis and how the results should be interpreted:
+
+- **Dataset scope:** Results are based on the supplied 50,000-row educational dataset and may not represent Uber's production pricing system.
+- **Feature availability:** The supplied dataset does not contain `passenger_count`, so passenger-count effects cannot be evaluated.
+- **Distance consistency:** Coordinate-derived Haversine distance differs substantially from the supplied `distance_km`; therefore, the supplied distance field is used for modeling while Haversine distance is retained as a diagnostic.
+- **Prediction inputs:** The deployed model relies on features available in the project's prediction contract, including distance, location category, payment method, and time-based features.
+- **Unobserved factors:** Real-world fares can be affected by variables such as surge pricing, traffic, tolls, ride category, demand, weather, and other operational factors that are not represented in this dataset.
+- **Model interpretation:** Reported MAE, RMSE, and R² describe performance on the project's holdout data and should not be interpreted as guaranteed real-world fare accuracy.
+- **Responsible use:** The project demonstrates the methodology and engineering process rather than reproducing Uber's proprietary pricing algorithm.
 
 ## 📚 Documentation
 
