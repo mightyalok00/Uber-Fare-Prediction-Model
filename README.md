@@ -43,7 +43,7 @@
 
 ## 🎯 Overview
 
-This project builds an end-to-end regression pipeline for estimating Uber trip fares from the supplied educational dataset.
+This project builds an end-to-end regression pipeline for estimating trip fares from the supplied educational dataset.
 
 The workflow covers:
 
@@ -59,6 +59,8 @@ The workflow covers:
 - Automated GitHub Actions validation
 
 > **Scope:** All reported results are specific to the supplied educational 50,000-row dataset. They should not be interpreted as a description of Uber's real-world pricing system.
+
+> **Important dataset note:** The supplied CSV does **not** contain `passenger_count`, although it is referenced in the assignment specification. Passenger-count analysis is therefore not performed, and no values are fabricated or inferred.
 
 ## 🚀 Live Application
 
@@ -78,9 +80,7 @@ The Streamlit application provides:
 
 ## 📊 Model Performance
 
-### Cross-validation comparison
-
-The models were compared using **5-fold cross-validation on the training partition only**.
+### Results at a glance
 
 | Model | CV MAE | CV RMSE | CV R² |
 |---|---:|---:|---:|
@@ -88,17 +88,7 @@ The models were compared using **5-fold cross-validation on the training partiti
 | Gradient Boosting | 2.4761 | 3.0911 | 0.7583 |
 | Random Forest | 2.5272 | 3.1774 | 0.7447 |
 
-### CV RMSE
-
-~~~mermaid
-xychart-beta
-    title "Mean 5-Fold CV RMSE — Lower is Better"
-    x-axis ["Linear Regression", "Gradient Boosting", "Random Forest"]
-    y-axis "RMSE" 3.0 --> 3.3
-    bar [3.0868, 3.0911, 3.1774]
-~~~
-
-**Model selection:** Linear Regression was selected using the predefined criterion of lowest mean cross-validation RMSE.
+**Selection criterion:** lowest mean 5-fold cross-validation RMSE on the training partition.
 
 ### Final untouched holdout
 
@@ -111,27 +101,58 @@ xychart-beta
 
 > R² is a regression metric, not percentage prediction accuracy. MAE and RMSE represent error in the dataset's fare units.
 
+### Actual vs Predicted
+
+![Actual vs Predicted](images/charts/actual_vs_predicted.png)
+
+### Fare vs Distance
+
+![Fare vs Distance](images/charts/fare_vs_distance.png)
+
+### Average Fare by Hour
+
+![Average Fare by Hour](images/charts/avg_fare_by_hour.png)
+
+## 🔎 Key Findings
+
+- `distance_km` has a strong positive Pearson correlation with fare of approximately **0.871** on valid completed rides.
+- Haversine distance is used as a **diagnostic**, not a prediction feature, because it is inconsistent with the supplied `distance_km`.
+- The correlation between Haversine distance and supplied `distance_km` is approximately **0.00069**; only about **1.50%** of rows are within 0.1 km.
+- **06:00** has the highest average fare in the valid completed-ride data.
+- Linear Regression has the lowest mean CV RMSE among the three evaluated models.
+- The final selected pipeline achieves **0.754 R²** on the untouched holdout.
+- Passenger-count effects cannot be evaluated because `passenger_count` is absent from the supplied dataset.
+
+These are dataset-specific observations, not causal claims about Uber's production pricing.
+
 ## 🧠 Methodology
 
 The project follows a leakage-aware training workflow:
 
-~~~mermaid
-flowchart TD
-    A[Raw Dataset] --> B[Data Validation]
-    B --> C[Completed Rides]
-    C --> D[Feature Engineering]
-    D --> E[80/20 Train-Holdout Split]
-    E --> F[5-Fold Cross-Validation]
-    F --> G[Linear Regression]
-    F --> H[Random Forest]
-    F --> I[Gradient Boosting]
-    G --> J[Select Lowest CV RMSE]
-    H --> J
-    I --> J
-    J --> K[Fit Final Pipeline]
-    K --> L[Untouched Holdout Evaluation]
-    L --> M[Serialized Model]
-    M --> N[Streamlit Application]
+~~~text
+Raw Dataset
+    ↓
+Data Validation & Cleaning
+    ↓
+Completed Rides
+    ↓
+Feature Engineering
+    ↓
+80/20 Train–Holdout Split
+    ↓
+5-Fold Cross-Validation on Training Data
+    ↓
+Compare Linear Regression / Random Forest / Gradient Boosting
+    ↓
+Select Lowest Mean CV RMSE
+    ↓
+Fit Final Pipeline
+    ↓
+Evaluate Once on Untouched Holdout
+    ↓
+Serialize + Reload Model
+    ↓
+Streamlit Deployment
 ~~~
 
 ### Leakage prevention
@@ -139,7 +160,7 @@ flowchart TD
 - The holdout partition is not used for model selection.
 - Preprocessing is contained inside the scikit-learn pipeline.
 - Cross-validation fits transformations within each training fold.
-- The selected pipeline is evaluated once on the untouched holdout.
+- The selected pipeline is evaluated on the untouched holdout.
 - The saved model is reloaded and checked for prediction consistency.
 
 ## 📚 Dataset
@@ -170,30 +191,9 @@ The supplied dataset contains **50,000 trip records**. After validation and clea
 | `is_weekend` | Weekend indicator | Engineered feature |
 | `is_rush_hour` | Rush-hour indicator | Engineered feature |
 
-> **Passenger count:** The assignment references `passenger_count`, but the supplied 50K CSV does not contain that field. The project does not fabricate or infer passenger counts.
+### Passenger count limitation
 
-## 🔎 Key Findings
-
-### Distance is strongly associated with fare
-
-The supplied `distance_km` has a Pearson correlation of approximately **0.871** with fare on valid completed rides.
-
-### Coordinate-derived distance is treated as a diagnostic
-
-The project calculates Haversine distance from pickup and drop-off coordinates to satisfy the coordinate-engineering requirement and validate the supplied distance field.
-
-However:
-
-- Correlation with supplied `distance_km`: approximately **0.00069**
-- Rows within 0.1 km of supplied distance: approximately **1.50%**
-
-Because of this discrepancy, Haversine distance is **not used as a prediction feature**. The supplied `distance_km` field is retained.
-
-### Time patterns
-
-In the valid completed-ride data, **06:00** has the highest average fare.
-
-These findings describe this dataset and are not causal claims about Uber's pricing system.
+The assignment references `passenger_count`, but the supplied 50K CSV does not contain that field. The project therefore does **not** fabricate, infer, or randomly generate passenger counts.
 
 ## 🤖 Prediction Features
 
@@ -212,7 +212,7 @@ is_weekend
 is_rush_hour
 ~~~
 
-The model excludes identifiers, target-derived fields, passenger count, coordinate fields, and other information not supported by the final prediction contract.
+The model excludes identifiers, the target, passenger count, coordinate fields, and other information not supported by the final prediction contract.
 
 ## 📁 Repository Structure
 
@@ -223,7 +223,7 @@ Uber-Fare-Prediction-Model/
 ├── dataset/                # Raw and cleaned datasets
 ├── models/                 # Trained model and evaluation outputs
 ├── notebooks/              # EDA and analysis
-├── images/                 # Charts and project visuals
+├── images/charts/          # README and analysis visuals
 ├── doc/                    # Detailed documentation
 ├── .github/workflows/      # Continuous integration
 │
@@ -328,7 +328,9 @@ For deeper project details:
 - [Project documentation](doc/README.md)
 - [EDA and analysis notebook](notebooks/Uber_Fare_Prediction.ipynb)
 - [Model comparison results](models/model_comparison.csv)
+- [Cross-validation results](models/cross_validation_results.csv)
 - [Final holdout metrics](models/final_test_metrics.csv)
+- [Model metadata](models/model_metadata.json)
 
 ## 👤 Author
 
