@@ -2,7 +2,13 @@
 
 An end-to-end regression portfolio project built from the **instructor-provided 50,000-trip educational dataset**. It covers data validation, EDA, feature engineering, leakage-safe model selection, untouched holdout evaluation, model persistence, business interpretation, and Streamlit deployment.
 
-🌐 **Live demo:** https://uber-fare-prediction-model.streamlit.app/
+<p align="center">
+  <a href="https://uber-fare-prediction-model.streamlit.app/">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-Streamlit-FF4B4B?style=for-the-badge" alt="Live Demo">
+  </a>
+</p>
+
+🌐 **Live Demo:** [https://uber-fare-prediction-model.streamlit.app/](https://uber-fare-prediction-model.streamlit.app/)
 
 ## Business Objective
 
@@ -23,6 +29,7 @@ Estimate `fare_amount` before a trip is completed using historical ride informat
 - End-to-end regression workflow with training-only cross-validation and an untouched final test set.
 - Reproducible saved pipeline, data-quality checks, and documented limitations.
 - Interactive Streamlit fare-prediction and business-analysis application.
+- **Live deployed application:** [Open the Uber Fare Prediction Model](https://uber-fare-prediction-model.streamlit.app/)
 
 **⭐ If this repository is useful to you, consider giving it a star.**
 
@@ -135,7 +142,10 @@ Untouched holdout: MAE **2.474**, RMSE **3.093**, R² **0.754**.
 **7. Can the model provide a reasonable fare estimate for a new trip?**  
 Yes. The Streamlit **Predict Fare** tab loads the final saved pipeline and estimates fare from supported pre-trip inputs.
 
-## Streamlit Application
+## 🚀 Live Streamlit Application
+
+**Try the deployed application:**  
+👉 [Open Uber Fare Prediction Model](https://uber-fare-prediction-model.streamlit.app/)
 
 Run locally:
 
