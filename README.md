@@ -76,7 +76,7 @@ The Streamlit application provides:
 | **Business Dashboard** | Explores fares, distance, payment methods, cities and ride status |
 | **Model Performance** | Displays model metrics, comparison results and predictions |
 | **Data Quality** | Shows validation and coordinate-distance diagnostics |
-| **About** | Explains methodology, scope and limitations |
+| **About** | Explains methodology, scope and considerations |
 
 ## 📊 Model Performance
 
