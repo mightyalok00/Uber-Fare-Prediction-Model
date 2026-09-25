@@ -330,12 +330,6 @@ For deeper project details:
 - [Model comparison results](models/model_comparison.csv)
 - [Final holdout metrics](models/final_test_metrics.csv)
 
-## 📄 License
-
-No open-source license is currently declared for this repository. There is no root-level `LICENSE` file, so the project does not claim permissions associated with a particular open-source license.
-
-If you decide to publish the project under an open-source license, add the complete license text as a root-level `LICENSE` file and update this section.
-
 ## 👤 Author
 
 **Alok Agarwal**
