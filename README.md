@@ -1,4 +1,4 @@
-# Uber Fare Prediction Model
+# 🚕 Uber Fare Prediction Model
 
 <p align="center">
   <strong>End-to-end machine learning project for Uber fare estimation</strong><br>
@@ -7,118 +7,80 @@
 
 <p align="center">
   <a href="https://uber-fare-prediction-model.streamlit.app/">
-    <img src="https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Live Demo">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Open the live Streamlit application">
   </a>
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
-  <img src="https://img.shields.io/badge/scikit--learn-1.8.0-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/scikit--learn-1.8.0-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="scikit-learn 1.8.0">
+  <img src="https://img.shields.io/github/actions/workflow/status/mightyalok00/Uber-Fare-Prediction-Model/python-checks.yml?label=CI&logo=githubactions&style=for-the-badge" alt="GitHub Actions CI">
 </p>
 
 <p align="center">
-  <a href="https://uber-fare-prediction-model.streamlit.app/"><strong>🚀 Open the Live Application</strong></a>
+  <a href="https://uber-fare-prediction-model.streamlit.app/"><strong>🚀 Open Live Application</strong></a>
+  &nbsp; • &nbsp;
+  <a href="#-model-performance"><strong>📊 View Results</strong></a>
+  &nbsp; • &nbsp;
+  <a href="#-documentation"><strong>📚 Documentation</strong></a>
 </p>
 
 ---
 
-## 📌 Overview
+## 📌 Project at a Glance
 
-This project is an end-to-end regression workflow for estimating **Uber trip fares** from historical ride data.
+| Item | Details |
+|---|---|
+| **Task** | Regression |
+| **Target** | `fare_amount` |
+| **Dataset** | 50,000 trip records |
+| **Completed rides modeled** | 42,538 |
+| **Models compared** | Linear Regression, Random Forest, Gradient Boosting |
+| **Validation** | 5-fold cross-validation on training data |
+| **Final evaluation** | 20% untouched holdout |
+| **Selected model** | Linear Regression |
+| **Holdout MAE** | **2.474** |
+| **Holdout RMSE** | **3.093** |
+| **Holdout R²** | **0.754** |
+| **Deployment** | Streamlit |
 
-It demonstrates a production-minded machine learning workflow covering:
+## 🎯 Overview
+
+This project builds an end-to-end regression pipeline for estimating Uber trip fares from the supplied educational dataset.
+
+The workflow covers:
 
 - Data validation and cleaning
 - Exploratory and business-focused analysis
-- Feature engineering
+- Time-based feature engineering
 - Leakage-safe preprocessing
-- Cross-validation and model comparison
+- 5-fold cross-validation
+- Regression model comparison
 - Untouched holdout evaluation
 - Model serialization and reload validation
 - Interactive Streamlit deployment
-- Automated GitHub Actions checks
+- Automated GitHub Actions validation
 
-> **Dataset scope:** The results in this repository are specific to the supplied educational 50,000-trip dataset. They should not be interpreted as a description of real-world Uber pricing.
+> **Scope:** All reported results are specific to the supplied educational 50,000-row dataset. They should not be interpreted as a description of Uber's real-world pricing system.
 
-## 🚀 Live Demo
+## 🚀 Live Application
 
-**Try the deployed Streamlit application:**
+**Try the deployed application:**
 
 ### 👉 [uber-fare-prediction-model.streamlit.app](https://uber-fare-prediction-model.streamlit.app/)
 
-The application includes:
+The Streamlit application provides:
 
-| Section | Purpose |
+| App section | What it does |
 |---|---|
-| **Predict Fare** | Estimate fare for a new trip using supported inputs |
-| **Business Dashboard** | Explore fares, distance, payment methods, cities and trip status |
-| **Model Performance** | Review evaluation metrics, model comparison and predictions |
-| **Data Quality** | Inspect dataset and coordinate-distance diagnostics |
-| **About** | Review scope, methodology and project limitations |
+| **Predict Fare** | Estimates a fare for a new trip |
+| **Business Dashboard** | Explores fares, distance, payment methods, cities and ride status |
+| **Model Performance** | Displays model metrics, comparison results and predictions |
+| **Data Quality** | Shows validation and coordinate-distance diagnostics |
+| **About** | Explains methodology, scope and limitations |
 
----
+## 📊 Model Performance
 
-## 🎯 Business Objective
+### Cross-validation comparison
 
-Estimate `fare_amount` before a trip is completed using information supported by the supplied dataset.
-
-The active model uses:
-
-- City
-- Payment method
-- Trip distance
-- Pickup year
-- Pickup month
-- Pickup day
-- Pickup hour
-- Day of week
-- Weekend indicator
-- Rush-hour indicator
-
-The model intentionally excludes fields that are unavailable at prediction time, target-derived information, identifiers, and coordinate fields that were found to be inconsistent with the supplied `distance_km`.
-
-## 📚 Dataset Dictionary
-
-The supplied CSV contains 50,000 trip records and 14 source columns. The table below summarizes the main fields used or reviewed by the project.
-
-| Field | Description | Role in project |
-|---|---|---|
-| `key` | Unique trip identifier | Excluded from modeling |
-| `fare_amount` | Recorded trip fare | Prediction target |
-| `pickup_datetime` | Pickup date and time | Source for time features |
-| `pickup_longitude` | Pickup longitude | Validation / Haversine diagnostic |
-| `pickup_latitude` | Pickup latitude | Validation / Haversine diagnostic |
-| `dropoff_longitude` | Drop-off longitude | Validation / Haversine diagnostic |
-| `dropoff_latitude` | Drop-off latitude | Validation / Haversine diagnostic |
-| `city` | City/category associated with the trip | Model feature |
-| `payment_method` | Payment method/category | Model feature |
-| `distance_km` | Supplied trip-distance field | Model feature |
-| `pickup_year` | Year extracted from pickup time | Engineered feature |
-| `pickup_month` | Month extracted from pickup time | Engineered feature |
-| `pickup_day` | Day of month extracted from pickup time | Engineered feature |
-| `pickup_hour` | Hour extracted from pickup time | Engineered feature |
-| `day_of_week` | Day-of-week derived from pickup time | Engineered feature |
-| `is_weekend` | Weekend indicator | Engineered feature |
-| `is_rush_hour` | Rush-hour indicator | Engineered feature |
-
-> **Important:** The assignment refers to a `passenger_count` field, but that field is not present in the supplied 50K CSV. The project does not invent or infer passenger counts.
-
----
-
-## 📊 Key Results
-
-### Data quality
-
-| Metric | Result |
-|---|---:|
-| Raw rows | 50,000 |
-| Raw columns | 14 |
-| Missing values | 0 |
-| Duplicate rows | 0 |
-| Valid cleaned rows | 49,997 |
-| Completed rides used for modeling | 42,538 |
-| Fare vs. supplied distance correlation | ~0.871 |
-
-### Model selection
-
-Three regression approaches were compared using **5-fold cross-validation on the training partition only**.
+The models were compared using **5-fold cross-validation on the training partition only**.
 
 | Model | CV MAE | CV RMSE | CV R² |
 |---|---:|---:|---:|
@@ -126,242 +88,118 @@ Three regression approaches were compared using **5-fold cross-validation on the
 | Gradient Boosting | 2.4761 | 3.0911 | 0.7583 |
 | Random Forest | 2.5272 | 3.1774 | 0.7447 |
 
-The final pipeline uses **Linear Regression**, selected according to the project's predefined model-selection criterion: lowest mean CV RMSE.
+### CV RMSE
 
-### CV RMSE comparison
-
-```mermaid
+~~~mermaid
 xychart-beta
-    title "Mean 5-Fold CV RMSE (lower is better)"
+    title "Mean 5-Fold CV RMSE — Lower is Better"
     x-axis ["Linear Regression", "Gradient Boosting", "Random Forest"]
     y-axis "RMSE" 3.0 --> 3.3
     bar [3.0868, 3.0911, 3.1774]
-```
+~~~
 
-The chart uses the same training-only 5-fold cross-validation results stored in `models/model_comparison.csv`.
+**Model selection:** Linear Regression was selected using the predefined criterion of lowest mean cross-validation RMSE.
 
 ### Final untouched holdout
 
 | Metric | Result |
 |---|---:|
-| MAE | **2.474** |
-| MSE | **9.567** |
-| RMSE | **3.093** |
-| R² | **0.754** |
+| **MAE** | **2.474** |
+| **MSE** | **9.567** |
+| **RMSE** | **3.093** |
+| **R²** | **0.754** |
 
-> R² is a regression metric, not percentage prediction accuracy. MAE and RMSE represent prediction error in fare units.
+> R² is a regression metric, not percentage prediction accuracy. MAE and RMSE represent error in the dataset's fare units.
 
----
+## 🧠 Methodology
 
-## 🔎 Important Data Finding
+The project follows a leakage-aware training workflow:
 
-The assignment asks for distance to be calculated from pickup and drop-off coordinates.
-
-This project calculates **Haversine distance** as a validation diagnostic. However, the coordinate-derived distance is internally inconsistent with the supplied `distance_km`:
-
-- Correlation with supplied distance: approximately **0.00069**
-- Rows within 0.1 km of supplied distance: approximately **1.50%**
-
-Because of this discrepancy, coordinate-derived distance is **not used as a prediction feature**.
-
-The supplied `distance_km` field is retained because it is the distance field supported by the educational dataset and shows a strong observed relationship with fare.
-
----
-
-## 🧠 Machine Learning Workflow
-
-The training pipeline follows this sequence:
-
-```text
-Raw Dataset
-    │
-    ▼
-Data Validation & Cleaning
-    │
-    ▼
-Completed Rides
-    │
-    ▼
-Feature Engineering
-    │
-    ├── Time features
-    ├── Weekend indicator
-    └── Rush-hour indicator
-    │
-    ▼
-80/20 Train-Test Split
-    │
-    ├───────────────┐
-    ▼               ▼
-Training Set     Untouched Test Set
-    │
-    ▼
-5-Fold Cross-Validation
-    │
-    ├── Linear Regression
-    ├── Random Forest
-    └── Gradient Boosting
-    │
-    ▼
-Model Selection
-    │
-    ▼
-Final Pipeline Fit
-    │
-    ▼
-Holdout Evaluation
-    │
-    ▼
-Serialized Model
-    │
-    ▼
-Streamlit Application
-```
+~~~mermaid
+flowchart TD
+    A[Raw Dataset] --> B[Data Validation]
+    B --> C[Completed Rides]
+    C --> D[Feature Engineering]
+    D --> E[80/20 Train-Holdout Split]
+    E --> F[5-Fold Cross-Validation]
+    F --> G[Linear Regression]
+    F --> H[Random Forest]
+    F --> I[Gradient Boosting]
+    G --> J[Select Lowest CV RMSE]
+    H --> J
+    I --> J
+    J --> K[Fit Final Pipeline]
+    K --> L[Untouched Holdout Evaluation]
+    L --> M[Serialized Model]
+    M --> N[Streamlit Application]
+~~~
 
 ### Leakage prevention
 
-The project deliberately keeps the final test partition untouched during model selection.
+- The holdout partition is not used for model selection.
+- Preprocessing is contained inside the scikit-learn pipeline.
+- Cross-validation fits transformations within each training fold.
+- The selected pipeline is evaluated once on the untouched holdout.
+- The saved model is reloaded and checked for prediction consistency.
 
-Preprocessing is contained inside the scikit-learn pipeline, so transformations are fitted within each training fold rather than on the complete dataset before cross-validation.
+## 📚 Dataset
 
----
+The supplied dataset contains **50,000 trip records**. After validation and cleaning:
 
-## 🛠️ Technology Stack
+- **49,997** rows remain valid.
+- **42,538** completed rides are used for modeling.
+- The target variable is `fare_amount`.
 
-| Technology | Purpose |
-|---|---|
-| **Python** | Core development and model training |
-| **Pandas** | Data loading and manipulation |
-| **NumPy** | Numerical computation |
-| **Scikit-learn** | Preprocessing, regression and evaluation |
-| **Joblib** | Model serialization |
-| **Matplotlib** | Visualization |
-| **Streamlit** | Interactive web application |
-| **GitHub Actions** | Automated CI checks |
+### Dataset dictionary
 
----
+| Field / feature | Description | Project role |
+|---|---|---|
+| `key` | Trip identifier | Excluded from modeling |
+| `fare_amount` | Recorded trip fare | **Target** |
+| `pickup_datetime` | Pickup date and time | Source for time features |
+| `pickup_longitude` / `pickup_latitude` | Pickup coordinates | Validation / Haversine diagnostic |
+| `dropoff_longitude` / `dropoff_latitude` | Drop-off coordinates | Validation / Haversine diagnostic |
+| `city` | City/category | Model feature |
+| `payment_method` | Payment method/category | Model feature |
+| `distance_km` | Supplied trip distance | **Model feature** |
+| `pickup_year` | Pickup year | Engineered feature |
+| `pickup_month` | Pickup month | Engineered feature |
+| `pickup_day` | Pickup day | Engineered feature |
+| `pickup_hour` | Pickup hour | Engineered feature |
+| `day_of_week` | Day of week | Engineered feature |
+| `is_weekend` | Weekend indicator | Engineered feature |
+| `is_rush_hour` | Rush-hour indicator | Engineered feature |
 
-## 📁 Repository Structure
+> **Passenger count:** The assignment references `passenger_count`, but the supplied 50K CSV does not contain that field. The project does not fabricate or infer passenger counts.
 
-```text
-Uber-Fare-Prediction-Model/
-│
-├── .github/
-│   └── workflows/
-│       └── python-checks.yml
-│
-├── app/
-│   └── app.py
-│
-├── dataset/
-│   ├── uber_trips_dataset_50k.csv
-│   └── uber_trips_dataset_50k_cleaned.csv
-│
-├── doc/
-│   ├── ASSIGNMENT_COVERAGE.md
-│   ├── PASSENGER_COUNT_NOTE.txt
-│   └── README.md
-│
-├── images/
-│   └── charts/
-│
-├── models/
-│   ├── uber_fare_model.pkl
-│   ├── model_metadata.json
-│   ├── cross_validation_results.csv
-│   ├── model_comparison.csv
-│   ├── final_test_metrics.csv
-│   ├── example_input.csv
-│   └── example_prediction.json
-│
-├── notebooks/
-│   └── Uber_Fare_Prediction.ipynb
-│
-├── train.py
-├── requirements.txt
-├── requirements-notebook.txt
-└── README.md
-```
+## 🔎 Key Findings
 
----
+### Distance is strongly associated with fare
 
-## 💻 Run Locally
+The supplied `distance_km` has a Pearson correlation of approximately **0.871** with fare on valid completed rides.
 
-### 1. Clone the repository
+### Coordinate-derived distance is treated as a diagnostic
 
-```bash
-git clone https://github.com/mightyalok00/Uber-Fare-Prediction-Model.git
-cd Uber-Fare-Prediction-Model
-```
+The project calculates Haversine distance from pickup and drop-off coordinates to satisfy the coordinate-engineering requirement and validate the supplied distance field.
 
-### 2. Create a virtual environment
+However:
 
-**Windows:**
+- Correlation with supplied `distance_km`: approximately **0.00069**
+- Rows within 0.1 km of supplied distance: approximately **1.50%**
 
-```powershell
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-```
+Because of this discrepancy, Haversine distance is **not used as a prediction feature**. The supplied `distance_km` field is retained.
 
-**macOS / Linux:**
+### Time patterns
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-```
+In the valid completed-ride data, **06:00** has the highest average fare.
 
-### 3. Install dependencies
+These findings describe this dataset and are not causal claims about Uber's pricing system.
 
-```bash
-pip install -r requirements.txt
-```
+## 🤖 Prediction Features
 
-Optional notebook dependencies:
+The final model uses:
 
-```bash
-pip install -r requirements-notebook.txt
-```
-
-### 4. Launch the Streamlit app
-
-```bash
-python -m streamlit run app/app.py
-```
-
-The application will be available at the local Streamlit address shown in your terminal.
-
----
-
-## 🏋️ Reproduce Training
-
-The authoritative model-training environment is **Python 3.12**.
-
-Run:
-
-```bash
-python train.py --output-dir work/run_001
-```
-
-The training script produces:
-
-- `uber_fare_model.pkl`
-- `model_metadata.json`
-- `cross_validation_results.csv`
-- `model_comparison.csv`
-- `final_test_metrics.csv`
-- `example_input.csv`
-- `example_prediction.json`
-
-The pipeline is reloaded after serialization and its predictions are checked against the original fitted pipeline.
-
----
-
-## 🔬 Model Contract
-
-### Included features
-
-```text
+~~~text
 city
 payment_method
 distance_km
@@ -372,47 +210,99 @@ pickup_hour
 day_of_week
 is_weekend
 is_rush_hour
-```
+~~~
 
-### Excluded features
+The model excludes identifiers, target-derived fields, passenger count, coordinate fields, and other information not supported by the final prediction contract.
 
-- Pickup/drop-off latitude and longitude
-- `passenger_count` — not present in the supplied CSV
-- `drop_time`
-- `status`
-- Trip, rider and driver identifiers
-- Target-derived fields
+## 📁 Repository Structure
 
-This keeps the prediction interface aligned with the information available to the application.
+~~~text
+Uber-Fare-Prediction-Model/
+│
+├── app/                    # Streamlit application
+├── dataset/                # Raw and cleaned datasets
+├── models/                 # Trained model and evaluation outputs
+├── notebooks/              # EDA and analysis
+├── images/                 # Charts and project visuals
+├── doc/                    # Detailed documentation
+├── .github/workflows/      # Continuous integration
+│
+├── train.py                # Reproducible model-training pipeline
+├── requirements.txt        # Runtime dependencies
+├── requirements-notebook.txt
+└── README.md
+~~~
 
----
+## 💻 Run Locally
 
-## 📈 Business Insights
+### 1. Clone
 
-Based on the supplied dataset:
+~~~bash
+git clone https://github.com/mightyalok00/Uber-Fare-Prediction-Model.git
+cd Uber-Fare-Prediction-Model
+~~~
 
-1. **Trip distance is the strongest supported observed fare signal.**
-2. Fare has a strong positive relationship with the supplied `distance_km`.
-3. **06:00** has the highest average fare among valid completed rides in this dataset.
-4. Passenger-count impact cannot be evaluated because `passenger_count` is absent.
-5. The model provides fare estimates through the Streamlit prediction interface.
+### 2. Create a virtual environment
 
-These are dataset-specific observations and are not causal claims about Uber's real-world pricing system.
+**Windows**
 
----
+~~~powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+~~~
+
+**macOS / Linux**
+
+~~~bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+~~~
+
+### 3. Install dependencies
+
+~~~bash
+pip install -r requirements.txt
+~~~
+
+### 4. Launch the application
+
+~~~bash
+python -m streamlit run app/app.py
+~~~
+
+## 🏋️ Reproduce Training
+
+The authoritative training environment is **Python 3.12**.
+
+~~~bash
+python train.py --output-dir work/run_001
+~~~
+
+The training pipeline exports:
+
+- `uber_fare_model.pkl`
+- `model_metadata.json`
+- `cross_validation_results.csv`
+- `model_comparison.csv`
+- `final_test_metrics.csv`
+- `example_input.csv`
+- `example_prediction.json`
+
+The exported model is reloaded after serialization and checked for prediction consistency.
 
 ## 🤖 Continuous Integration
 
-GitHub Actions contains two independent validation paths:
+GitHub Actions validates the project in two paths:
 
-### Python 3.12
+**Python 3.12**
 - Compiles the project
 - Installs runtime dependencies
 - Retrains the model
 - Reloads the exported model
 - Verifies a finite prediction
 
-### Python 3.14.7
+**Python 3.14.7**
 - Compiles the source
 - Loads the committed Python 3.12-trained model
 - Verifies prediction compatibility
@@ -420,37 +310,31 @@ GitHub Actions contains two independent validation paths:
 
 CI does not modify or commit repository files.
 
----
-
 ## ⚠️ Limitations
 
-This project has several important limitations:
-
-- The dataset is educational and should not be treated as a production Uber pricing dataset.
-- `passenger_count` is unavailable.
+- The dataset is educational rather than a production Uber pricing dataset.
+- `passenger_count` is unavailable in the supplied CSV.
 - Coordinate-derived distance is inconsistent with supplied `distance_km`.
 - `payment_method` is assumed to be available for this educational prediction workflow.
-- Real-world fares can depend on variables not represented here, including ride category, surge, traffic, tolls, weather and local demand.
+- Real-world fares may depend on ride category, surge, traffic, tolls, weather, demand and other variables not represented here.
 - Model performance should not be interpreted as guaranteed real-world pricing accuracy.
-
----
-
-## 📄 License
-
-No open-source license is currently declared for this repository. The README previously displayed an “Educational” license badge, but there is no corresponding `LICENSE` file, so that claim has been removed rather than implying permissions that have not been granted.
-
-If you want to publish this project under a specific open-source license, add the complete license text as a root-level `LICENSE` file and update this section accordingly.
 
 ## 📚 Documentation
 
-Additional project documentation is available in the repository:
+For deeper project details:
 
-- `doc/ASSIGNMENT_COVERAGE.md`
-- `doc/PASSENGER_COUNT_NOTE.txt`
-- `doc/README.md`
-- `notebooks/Uber_Fare_Prediction.ipynb`
+- [Assignment coverage](doc/ASSIGNMENT_COVERAGE.md)
+- [Passenger-count note](doc/PASSENGER_COUNT_NOTE.txt)
+- [Project documentation](doc/README.md)
+- [EDA and analysis notebook](notebooks/Uber_Fare_Prediction.ipynb)
+- [Model comparison results](models/model_comparison.csv)
+- [Final holdout metrics](models/final_test_metrics.csv)
 
----
+## 📄 License
+
+No open-source license is currently declared for this repository. There is no root-level `LICENSE` file, so the project does not claim permissions associated with a particular open-source license.
+
+If you decide to publish the project under an open-source license, add the complete license text as a root-level `LICENSE` file and update this section.
 
 ## 👤 Author
 
@@ -458,18 +342,14 @@ Additional project documentation is available in the repository:
 
 Data Analytics • Data Science • Machine Learning • Digital Marketing
 
+<p align="center">
+  <a href="https://uber-fare-prediction-model.streamlit.app/"><strong>🚀 Try the Live Demo</strong></a>
+  &nbsp; • &nbsp;
+  <a href="https://github.com/mightyalok00/Uber-Fare-Prediction-Model"><strong>⭐ View the Repository</strong></a>
+</p>
+
 ---
 
-## ⭐ Support the Project
-
-If you find this project useful for learning or reference, consider **starring the repository**.
-
 <p align="center">
-  <a href="https://github.com/mightyalok00/Uber-Fare-Prediction-Model">
-    <strong>⭐ View the GitHub Repository</strong>
-  </a>
-  &nbsp; • &nbsp;
-  <a href="https://uber-fare-prediction-model.streamlit.app/">
-    <strong>🚀 Try the Live Demo</strong>
-  </a>
+  <sub>Built as an educational machine-learning project with reproducibility, evaluation and deployment in mind.</sub>
 </p>
