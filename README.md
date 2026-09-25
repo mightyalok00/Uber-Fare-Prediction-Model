@@ -11,7 +11,6 @@
   </a>
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
   <img src="https://img.shields.io/badge/scikit--learn-1.8.0-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="scikit-learn">
-  <img src="https://img.shields.io/badge/License-Educational-lightgrey?style=for-the-badge" alt="Educational Project">
 </p>
 
 <p align="center">
@@ -75,6 +74,32 @@ The active model uses:
 
 The model intentionally excludes fields that are unavailable at prediction time, target-derived information, identifiers, and coordinate fields that were found to be inconsistent with the supplied `distance_km`.
 
+## 📚 Dataset Dictionary
+
+The supplied CSV contains 50,000 trip records and 14 source columns. The table below summarizes the main fields used or reviewed by the project.
+
+| Field | Description | Role in project |
+|---|---|---|
+| `key` | Unique trip identifier | Excluded from modeling |
+| `fare_amount` | Recorded trip fare | Prediction target |
+| `pickup_datetime` | Pickup date and time | Source for time features |
+| `pickup_longitude` | Pickup longitude | Validation / Haversine diagnostic |
+| `pickup_latitude` | Pickup latitude | Validation / Haversine diagnostic |
+| `dropoff_longitude` | Drop-off longitude | Validation / Haversine diagnostic |
+| `dropoff_latitude` | Drop-off latitude | Validation / Haversine diagnostic |
+| `city` | City/category associated with the trip | Model feature |
+| `payment_method` | Payment method/category | Model feature |
+| `distance_km` | Supplied trip-distance field | Model feature |
+| `pickup_year` | Year extracted from pickup time | Engineered feature |
+| `pickup_month` | Month extracted from pickup time | Engineered feature |
+| `pickup_day` | Day of month extracted from pickup time | Engineered feature |
+| `pickup_hour` | Hour extracted from pickup time | Engineered feature |
+| `day_of_week` | Day-of-week derived from pickup time | Engineered feature |
+| `is_weekend` | Weekend indicator | Engineered feature |
+| `is_rush_hour` | Rush-hour indicator | Engineered feature |
+
+> **Important:** The assignment refers to a `passenger_count` field, but that field is not present in the supplied 50K CSV. The project does not invent or infer passenger counts.
+
 ---
 
 ## 📊 Key Results
@@ -102,6 +127,18 @@ Three regression approaches were compared using **5-fold cross-validation on the
 | Random Forest | 2.5272 | 3.1774 | 0.7447 |
 
 The final pipeline uses **Linear Regression**, selected according to the project's predefined model-selection criterion: lowest mean CV RMSE.
+
+### CV RMSE comparison
+
+```mermaid
+xychart-beta
+    title "Mean 5-Fold CV RMSE (lower is better)"
+    x-axis ["Linear Regression", "Gradient Boosting", "Random Forest"]
+    y-axis "RMSE" 3.0 --> 3.3
+    bar [3.0868, 3.0911, 3.1774]
+```
+
+The chart uses the same training-only 5-fold cross-validation results stored in `models/model_comparison.csv`.
 
 ### Final untouched holdout
 
@@ -397,6 +434,12 @@ This project has several important limitations:
 - Model performance should not be interpreted as guaranteed real-world pricing accuracy.
 
 ---
+
+## 📄 License
+
+No open-source license is currently declared for this repository. The README previously displayed an “Educational” license badge, but there is no corresponding `LICENSE` file, so that claim has been removed rather than implying permissions that have not been granted.
+
+If you want to publish this project under a specific open-source license, add the complete license text as a root-level `LICENSE` file and update this section accordingly.
 
 ## 📚 Documentation
 
